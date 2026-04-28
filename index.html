@@ -1325,8 +1325,6 @@ function populateDomainFilter(domains) {
   });
 }
 
-}
-
 async function fetchKeywordsForDomain(domain, retries = 3) {
   try {
     const data = await arFetch(`/api/v4/domains/${domain.id}/keywords/?page_size=500`);
