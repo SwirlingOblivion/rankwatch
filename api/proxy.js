@@ -9,24 +9,26 @@ export default async function handler(req, res) {
   const authHeader = req.headers['authorization'];
   if (!authHeader) return res.status(401).json({ error: 'Missing authorization' });
 
-  // Ahrefs proxy
+  // ── Ahrefs proxy ──────────────────────────────────────────
   if (ahrefs === '1') {
     try {
       const token = authHeader.replace('Bearer ', '');
-      const url = `https://api.ahrefs.com/v3/keywords-explorer/overview?select=keyword,volume,difficulty&keywords=${encodeURIComponent(keywords)}&country=${country}&limit=1000`;
+      // Correct endpoint: /v3/keywords-explorer/metrics
+      // select=volume,difficulty — difficulty costs 10 units/row, volume costs 1 unit/row
+      const url = `https://api.ahrefs.com/v3/keywords-explorer/metrics?select=keyword,volume,difficulty&keywords=${encodeURIComponent(keywords)}&country=${country}`;
       const response = await fetch(url, {
         headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
       });
       const text = await response.text();
       let data;
-      try { data = JSON.parse(text); } catch { data = { error: text }; }
+      try { data = JSON.parse(text); } catch { data = { error: text, raw: text.substring(0,500) }; }
       return res.status(response.status).json(data);
     } catch(err) {
       return res.status(500).json({ error: err.message });
     }
   }
 
-  // AccuRanker proxy
+  // ── AccuRanker proxy ──────────────────────────────────────
   if (!path) return res.status(400).json({ error: 'Missing path' });
 
   try {
@@ -34,7 +36,6 @@ export default async function handler(req, res) {
     const response = await fetch(url, {
       headers: { 'Authorization': authHeader, 'Accept': 'application/json' }
     });
-
     const text = await response.text();
     let data;
     try { data = JSON.parse(text); }
