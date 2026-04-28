@@ -841,6 +841,132 @@
   .site-badge-top20 { background: rgba(61,159,255,0.15); color: var(--top20); }
 
   .no-top-rankings { color: var(--muted); font-size: 11px; }
+
+  /* OPPORTUNITIES TAB */
+  .opp-header {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  }
+
+  .ahrefs-key-input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; color: var(--text);
+    outline: none; width: 280px;
+    transition: border-color 0.2s;
+  }
+
+  .ahrefs-key-input:focus { border-color: var(--accent); }
+  .ahrefs-key-input::placeholder { color: var(--muted); }
+
+  .fetch-ahrefs-btn {
+    background: linear-gradient(135deg, #ff6b35, #f7931e);
+    color: white; border: none;
+    border-radius: 8px; padding: 10px 20px;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; gap: 8px;
+    white-space: nowrap;
+  }
+
+  .fetch-ahrefs-btn:hover { transform: translateY(-1px); opacity: 0.9; }
+  .fetch-ahrefs-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .ahrefs-status {
+    font-size: 12px; color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .ahrefs-status.ok { color: var(--up); }
+  .ahrefs-status.err { color: var(--down); }
+
+  .opp-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px; margin-bottom: 24px;
+  }
+
+  .opp-table-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 32px;
+  }
+
+  .opp-row {
+    display: grid;
+    grid-template-columns: 1fr 120px 70px 80px 80px 100px 120px;
+    align-items: center;
+    padding: 13px 24px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    transition: background 0.15s;
+    gap: 12px;
+  }
+
+  .opp-row:hover { background: rgba(255,255,255,0.02); }
+  .opp-row:last-child { border-bottom: none; }
+
+  .opp-row-header {
+    display: grid;
+    grid-template-columns: 1fr 120px 70px 80px 80px 100px 120px;
+    align-items: center;
+    padding: 11px 24px;
+    gap: 12px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer; user-select: none;
+  }
+
+  .opp-row-header span:hover { color: var(--text); }
+
+  .opp-label {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 100px;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.04em; white-space: nowrap;
+  }
+
+  .opp-protect { background: rgba(255,200,74,0.15); color: var(--top3); }
+  .opp-push { background: rgba(124,106,255,0.15); color: var(--accent); }
+  .opp-quickwin { background: rgba(61,255,160,0.15); color: var(--up); }
+  .opp-build { background: rgba(61,159,255,0.15); color: var(--top20); }
+
+  .opp-score {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px; font-weight: 700;
+    color: var(--accent);
+  }
+
+  .kd-bar {
+    display: flex; align-items: center; gap: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+
+  .kd-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
+
+  .kd-easy { background: var(--up); }
+  .kd-medium { background: var(--gold); }
+  .kd-hard { background: var(--down); }
+
+  .opp-filters {
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+    margin-bottom: 20px;
+  }
 </style>
 </head>
 <body>
@@ -898,6 +1024,7 @@
   <div class="tab-nav">
     <button class="tab-btn active" id="tab-btn-keywords" onclick="switchTab('keywords')">📊 Keywords View</button>
     <button class="tab-btn" id="tab-btn-sites" onclick="switchTab('sites')">🌐 Sites View</button>
+    <button class="tab-btn" id="tab-btn-opportunities" onclick="switchTab('opportunities')">💰 Opportunities</button>
   </div>
 
   <!-- KEYWORDS TAB -->
@@ -1119,6 +1246,81 @@
 
   </div><!-- end tab-sites -->
 
+  <!-- OPPORTUNITIES TAB -->
+  <div class="tab-content" id="tab-opportunities">
+
+    <!-- Ahrefs connection header -->
+    <div class="opp-header">
+      <span class="settings-label">Ahrefs API Key</span>
+      <input type="password" class="ahrefs-key-input" id="ahrefs-key-input" placeholder="Ahrefs API token..." autocomplete="off">
+      <button class="fetch-ahrefs-btn" id="fetch-ahrefs-btn" onclick="fetchAhrefsData()">
+        🔍 Fetch Opportunity Data
+      </button>
+      <span class="ahrefs-status" id="ahrefs-status">Enter your Ahrefs API key and click Fetch</span>
+      <div class="spacer"></div>
+      <span style="font-size:11px;color:var(--muted)">Only fetches keywords ranking 1–50 · Results cached</span>
+    </div>
+
+    <!-- Opportunity stats -->
+    <div class="opp-stats">
+      <div class="stat-card gold">
+        <div class="stat-label">🏆 Protect</div>
+        <div class="stat-value" id="opp-stat-protect">—</div>
+      </div>
+      <div class="stat-card purple">
+        <div class="stat-label">⚡ Push</div>
+        <div class="stat-value" id="opp-stat-push">—</div>
+      </div>
+      <div class="stat-card up">
+        <div class="stat-label">🔥 Quick Wins</div>
+        <div class="stat-value" id="opp-stat-quickwin">—</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-label">📈 Build</div>
+        <div class="stat-value" id="opp-stat-build">—</div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="opp-filters">
+      <select class="filter-select" id="opp-domain-filter" onchange="renderOppTable()">
+        <option value="all">All Domains</option>
+      </select>
+      <div class="pill-group">
+        <div class="pill active-all" id="opill-all" onclick="setOppFilter('all')">All</div>
+        <div class="pill" id="opill-protect" onclick="setOppFilter('protect')">🏆 Protect</div>
+        <div class="pill" id="opill-push" onclick="setOppFilter('push')">⚡ Push</div>
+        <div class="pill" id="opill-quickwin" onclick="setOppFilter('quickwin')">🔥 Quick Win</div>
+        <div class="pill" id="opill-build" onclick="setOppFilter('build')">📈 Build</div>
+      </div>
+      <input type="text" class="search-input" id="opp-search" placeholder="Search keywords..." oninput="renderOppTable()" style="margin-left:auto">
+    </div>
+
+    <!-- Opportunities table -->
+    <div class="opp-table-section">
+      <div class="opp-row-header">
+        <span onclick="sortOpp('keyword')">Keyword ↕</span>
+        <span onclick="sortOpp('domain')">Domain ↕</span>
+        <span onclick="sortOpp('rank')" style="text-align:center">Rank ↕</span>
+        <span onclick="sortOpp('volume')" style="text-align:center">Volume ↕</span>
+        <span onclick="sortOpp('kd')" style="text-align:center">KD ↕</span>
+        <span onclick="sortOpp('score')" style="text-align:center">Score ↕</span>
+        <span>Opportunity</span>
+      </div>
+      <div id="opp-table-body">
+        <div class="empty-panel" style="padding:60px">
+          <div class="empty-icon">🔍</div>
+          Enter your Ahrefs API key above and click "Fetch Opportunity Data" to get started
+        </div>
+      </div>
+      <div class="pagination">
+        <span id="opp-pagination-info">—</span>
+        <div class="page-btns" id="opp-page-btns"></div>
+      </div>
+    </div>
+
+  </div><!-- end tab-opportunities -->
+
 </div><!-- end dashboard -->
 
 <script>
@@ -1333,7 +1535,7 @@ async function fetchKeywordsForDomain(domain, retries = 3) {
     yesterday.setDate(yesterday.getDate() - 1);
     const fmt = d => d.toISOString().split('T')[0];
 
-    const fields = 'id,keyword,ranks.rank,ranks.created_at,search_volume.search_volume,tags';
+    const fields = 'id,keyword,ranks.rank,ranks.created_at,search_volume.search_volume,search_volume.ai_search_volume,tags';
     const url = `/api/v4/domains/${domain.id}/keywords/?fields=${fields}&period_from=${fmt(yesterday)}&period_to=${fmt(today)}&page_size=500`;
     const data = await arFetch(url);
     const kws = data.results || data;
@@ -1348,7 +1550,7 @@ async function fetchKeywordsForDomain(domain, retries = 3) {
       const ranks = kw.ranks || [];
       const todayRank = ranks.length > 0 ? ranks[ranks.length - 1].rank : null;
       const yesterdayRank = ranks.length > 1 ? ranks[0].rank : null;
-      const volume = kw.search_volume ? kw.search_volume.search_volume : null;
+      const volume = kw.search_volume ? (kw.search_volume.ai_search_volume || kw.search_volume.search_volume || 0) : 0;
 
       return {
         id: kw.id,
@@ -1594,7 +1796,6 @@ function renderTable() {
         <td><div class="threshold-tags">${tags.join('') || '<span style="color:var(--muted);font-size:12px">—</span>'}</div></td>
         <td class="vol-cell">${kw.search_volume ? kw.search_volume.toLocaleString() : '—'}</td>
       </tr>`;
-  }).join('');
 
   const total = filteredKeywords.length;
   const totalPages = Math.ceil(total / PAGE_SIZE);
@@ -1776,14 +1977,251 @@ function renderSitesTable() {
   addBtn('→', sitesPage + 1, false, sitesPage === totalPages);
 }
 
+// ─── OPPORTUNITIES ────────────────────────────────────────────
+let oppData = [];
+let filteredOpp = [];
+let oppFilter = 'all';
+let oppSortField = 'score';
+let oppSortDir = -1;
+let oppPage = 1;
+const OPP_PAGE_SIZE = 50;
+
+async function fetchAhrefsData() {
+  const key = document.getElementById('ahrefs-key-input').value.trim();
+  if (!key) { setAhrefsStatus('Please enter your Ahrefs API key', 'err'); return; }
+
+  const btn = document.getElementById('fetch-ahrefs-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Fetching...';
+  setAhrefsStatus('Preparing keyword list...', '');
+
+  // Get keywords ranking 1-50
+  const targetKws = allKeywords.filter(kw => kw.rank !== null && kw.rank >= 1 && kw.rank <= 50);
+  setAhrefsStatus(`Found ${targetKws.length} keywords ranking 1–50. Fetching keyword difficulty from Ahrefs...`, '');
+
+  try {
+    // Fetch only KD from Ahrefs — volume comes from AccuRanker
+    const kwTexts = [...new Set(targetKws.map(kw => kw.keyword))];
+    const batches = chunkArray(kwTexts, 100);
+    let kdMap = {};
+
+    for (let i = 0; i < batches.length; i++) {
+      setAhrefsStatus(`Fetching KD... batch ${i+1}/${batches.length}`, '');
+      const batch = batches[i];
+      const res = await fetch(`/api/proxy?ahrefs=1&keywords=${encodeURIComponent(batch.join('\n'))}&country=us`, {
+        headers: { 'Authorization': `Bearer ${key}` }
+      });
+      const data = await res.json();
+      if (data.keywords) {
+        data.keywords.forEach(kw => {
+          kdMap[kw.keyword.toLowerCase()] = kw.difficulty ?? null;
+        });
+      }
+      if (i < batches.length - 1) await sleep(500);
+    }
+
+    // Build opportunity data using AccuRanker AI volume + Ahrefs KD
+    oppData = targetKws.map(kw => {
+      const kd = kdMap[kw.keyword.toLowerCase()] ?? null;
+      const volume = kw.search_volume || 0;
+      const rank = kw.rank;
+      const score = volume > 0 && rank > 0 ? Math.round(volume / rank) : 0;
+
+      let opportunity;
+      if (rank <= 3) opportunity = 'protect';
+      else if (rank <= 10) opportunity = 'push';
+      else if (rank <= 20) opportunity = 'quickwin';
+      else opportunity = 'build';
+
+      return {
+        keyword: kw.keyword,
+        domain: kw.domainName,
+        domainId: kw.domainId,
+        rank, volume, kd, score, opportunity
+      };
+    });
+
+    // Cache Ahrefs data
+    try {
+      const d = await openDB();
+      const tx = d.transaction('cache', 'readwrite');
+      tx.objectStore('cache').put({ ts: Date.now(), data: oppData }, 'ahrefs');
+    } catch(e) {}
+
+    setAhrefsStatus(`✓ Loaded ${oppData.length} opportunities`, 'ok');
+    localStorage.setItem('ar_ahrefs_key', key);
+    populateOppDomainFilter();
+    renderOppStats();
+    renderOppTable();
+
+  } catch(err) {
+    setAhrefsStatus(`Error: ${err.message}`, 'err');
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔍 Fetch Opportunity Data';
+  }
+}
+
+async function loadCachedAhrefsData() {
+  try {
+    const d = await openDB();
+    return new Promise(resolve => {
+      const tx = d.transaction('cache', 'readonly');
+      const req = tx.objectStore('cache').get('ahrefs');
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => resolve(null);
+    });
+  } catch { return null; }
+}
+
+function setAhrefsStatus(msg, type) {
+  const el = document.getElementById('ahrefs-status');
+  el.textContent = msg;
+  el.className = 'ahrefs-status' + (type ? ` ${type}` : '');
+}
+
+function setOppFilter(f) {
+  oppFilter = f;
+  oppPage = 1;
+  ['all','protect','push','quickwin','build'].forEach(x => {
+    const el = document.getElementById(`opill-${x}`);
+    if (!el) return;
+    const map = { all: 'active-all', protect: 'active-top3', push: 'active-top10', quickwin: 'active-up', build: 'active-top20' };
+    el.className = 'pill' + (x === f ? ` ${map[x]}` : '');
+  });
+  renderOppTable();
+}
+
+function sortOpp(field) {
+  if (oppSortField === field) oppSortDir *= -1;
+  else { oppSortField = field; oppSortDir = -1; }
+  renderOppTable();
+}
+
+function populateOppDomainFilter() {
+  const sel = document.getElementById('opp-domain-filter');
+  const current = sel.value;
+  sel.innerHTML = '<option value="all">All Domains</option>';
+  const domains = [...new Set(oppData.map(o => o.domainId))];
+  domains.forEach(id => {
+    const name = oppData.find(o => o.domainId === id)?.domain || id;
+    const opt = document.createElement('option');
+    opt.value = id; opt.textContent = name;
+    sel.appendChild(opt);
+  });
+  sel.value = current;
+}
+
+function renderOppStats() {
+  document.getElementById('opp-stat-protect').textContent = oppData.filter(o => o.opportunity === 'protect').length;
+  document.getElementById('opp-stat-push').textContent = oppData.filter(o => o.opportunity === 'push').length;
+  document.getElementById('opp-stat-quickwin').textContent = oppData.filter(o => o.opportunity === 'quickwin').length;
+  document.getElementById('opp-stat-build').textContent = oppData.filter(o => o.opportunity === 'build').length;
+}
+
+function renderOppTable() {
+  const domFilter = document.getElementById('opp-domain-filter').value;
+  const search = (document.getElementById('opp-search').value || '').toLowerCase();
+
+  filteredOpp = oppData.filter(o => {
+    if (domFilter !== 'all' && String(o.domainId) !== String(domFilter)) return false;
+    if (search && !o.keyword.toLowerCase().includes(search) && !o.domain.toLowerCase().includes(search)) return false;
+    if (oppFilter !== 'all' && o.opportunity !== oppFilter) return false;
+    return true;
+  });
+
+  filteredOpp.sort((a, b) => {
+    let av, bv;
+    if (oppSortField === 'keyword') return oppSortDir * a.keyword.localeCompare(b.keyword);
+    if (oppSortField === 'domain') return oppSortDir * a.domain.localeCompare(b.domain);
+    av = a[oppSortField] ?? -1; bv = b[oppSortField] ?? -1;
+    return oppSortDir * (av - bv);
+  });
+
+  const start = (oppPage - 1) * OPP_PAGE_SIZE;
+  const page = filteredOpp.slice(start, start + OPP_PAGE_SIZE);
+  const tbody = document.getElementById('opp-table-body');
+
+  if (oppData.length === 0) {
+    tbody.innerHTML = `<div class="empty-panel" style="padding:60px"><div class="empty-icon">🔍</div>Enter your Ahrefs API key above and click "Fetch Opportunity Data"</div>`;
+    return;
+  }
+
+  if (filteredOpp.length === 0) {
+    tbody.innerHTML = `<div class="empty-panel" style="padding:40px"><div class="empty-icon">✓</div>No keywords match the current filters</div>`;
+    return;
+  }
+
+  const oppLabels = {
+    protect: '<span class="opp-label opp-protect">🏆 Protect</span>',
+    push: '<span class="opp-label opp-push">⚡ Push</span>',
+    quickwin: '<span class="opp-label opp-quickwin">🔥 Quick Win</span>',
+    build: '<span class="opp-label opp-build">📈 Build</span>'
+  };
+
+  tbody.innerHTML = page.map(o => {
+    const kdHtml = o.kd !== null ? (() => {
+      const cls = o.kd < 30 ? 'kd-easy' : o.kd < 60 ? 'kd-medium' : 'kd-hard';
+      return `<div class="kd-bar"><div class="kd-dot ${cls}"></div>${o.kd}</div>`;
+    })() : '<span style="color:var(--muted)">—</span>';
+
+    return `<div class="opp-row">
+      <div class="kw-cell">${escHtml(o.keyword)}</div>
+      <div class="domain-cell" style="font-size:11px">${escHtml(o.domain)}</div>
+      <div class="rank-cell" style="text-align:center">#${o.rank}</div>
+      <div class="vol-cell" style="text-align:center">${o.volume ? o.volume.toLocaleString() : '—'}</div>
+      <div style="text-align:center">${kdHtml}</div>
+      <div class="opp-score" style="text-align:center">${o.score.toLocaleString()}</div>
+      <div>${oppLabels[o.opportunity] || ''}</div>
+    </div>`;
+  }).join('');
+
+  const total = filteredOpp.length;
+  const totalPages = Math.ceil(total / OPP_PAGE_SIZE);
+  document.getElementById('opp-pagination-info').textContent = `Showing ${Math.min(start+1,total)}–${Math.min(start+OPP_PAGE_SIZE,total)} of ${total} opportunities`;
+
+  const oppPageBtns = document.getElementById('opp-page-btns');
+  oppPageBtns.innerHTML = '';
+  if (totalPages <= 1) return;
+  const addBtn = (label, page, active, disabled) => {
+    const b = document.createElement('button');
+    b.className = 'page-btn' + (active ? ' active' : '');
+    b.textContent = label; b.disabled = disabled;
+    b.onclick = () => { oppPage = page; renderOppTable(); };
+    oppPageBtns.appendChild(b);
+  };
+  addBtn('←', oppPage-1, false, oppPage===1);
+  const sp = Math.max(1, oppPage-2), ep = Math.min(totalPages, sp+4);
+  for (let i = sp; i <= ep; i++) addBtn(i, i, i===oppPage, false);
+  addBtn('→', oppPage+1, false, oppPage===totalPages);
+}
+
 // ─── TAB SWITCHING ────────────────────────────────────────────
 function switchTab(tab) {
-  ['keywords', 'sites'].forEach(t => {
-    document.getElementById(`tab-content-${t}`) || document.getElementById(`tab-${t}`);
+  ['keywords', 'sites', 'opportunities'].forEach(t => {
     document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
     document.getElementById(`tab-btn-${t}`).classList.toggle('active', t === tab);
   });
   if (tab === 'sites' && sitesData.length === 0 && allKeywords.length > 0) buildSitesData();
+  if (tab === 'opportunities') {
+    // Load Ahrefs key from storage if saved
+    const savedKey = localStorage.getItem('ar_ahrefs_key');
+    if (savedKey) document.getElementById('ahrefs-key-input').value = savedKey;
+    // Load cached opp data if available
+    if (oppData.length === 0) {
+      loadCachedAhrefsData().then(cached => {
+        if (cached && cached.data) {
+          oppData = cached.data;
+          const age = Math.floor((Date.now() - cached.ts) / 60000);
+          setAhrefsStatus(`Loaded from cache (${age}m ago) — click Fetch to refresh`, 'ok');
+          populateOppDomainFilter();
+          renderOppStats();
+          renderOppTable();
+        }
+      });
+    }
+  }
 }
 
 // ─── UTILITIES ───────────────────────────────────────────────
