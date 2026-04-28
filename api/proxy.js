@@ -8,7 +8,7 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const { path } = req.query;
+  const { path, debug } = req.query;
   if (!path) return res.status(400).json({ error: 'Missing path' });
 
   const authHeader = req.headers['authorization'];
@@ -24,6 +24,16 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
+
+    // Debug mode: return first keyword's raw fields so we can inspect them
+    if (debug === '1') {
+      const sample = data.results ? data.results[0] : (Array.isArray(data) ? data[0] : data);
+      return res.status(200).json({ 
+        fields: sample ? Object.keys(sample) : [],
+        sample: sample
+      });
+    }
+
     return res.status(response.status).json(data);
   } catch (err) {
     return res.status(500).json({ error: err.message });
