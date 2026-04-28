@@ -679,6 +679,168 @@
   .change-key-btn:hover { color: var(--text); border-color: var(--muted); }
 
   .spacer { flex: 1; }
+
+  /* TABS */
+  .tab-nav {
+    display: flex; gap: 4px;
+    margin-bottom: 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 5px;
+    width: fit-content;
+  }
+
+  .tab-btn {
+    padding: 9px 22px;
+    border-radius: 8px;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px; font-weight: 700;
+    cursor: pointer;
+    border: none;
+    background: none;
+    color: var(--muted);
+    transition: all 0.15s;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .tab-btn:hover { color: var(--text); }
+
+  .tab-btn.active {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* SITES VIEW */
+  .sites-controls {
+    display: flex; gap: 12px; align-items: center;
+    margin-bottom: 20px; flex-wrap: wrap;
+  }
+
+  .sites-search {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 14px;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px; color: var(--text);
+    outline: none; width: 260px;
+    transition: border-color 0.2s;
+  }
+
+  .sites-search:focus { border-color: var(--accent); }
+  .sites-search::placeholder { color: var(--muted); }
+
+  .sites-filter-pill {
+    padding: 8px 16px;
+    border-radius: 100px;
+    font-size: 12px; font-weight: 700;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--muted);
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .sites-filter-pill:hover { color: var(--text); }
+  .sites-filter-pill.active { background: var(--surface2); color: var(--text); border-color: var(--text); }
+  .sites-filter-pill.active-top3 { background: rgba(255,200,74,0.1); color: var(--top3); border-color: var(--top3); }
+  .sites-filter-pill.active-top10 { background: rgba(124,106,255,0.1); color: var(--top10); border-color: var(--top10); }
+  .sites-filter-pill.active-top20 { background: rgba(61,159,255,0.1); color: var(--top20); border-color: var(--top20); }
+
+  .sites-table-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 32px;
+  }
+
+  .sites-table-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .sites-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .site-row {
+    display: grid;
+    grid-template-columns: 1fr 80px 80px 80px 80px 100px;
+    align-items: center;
+    padding: 13px 24px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    transition: background 0.15s;
+    gap: 12px;
+  }
+
+  .site-row:hover { background: rgba(255,255,255,0.02); }
+  .site-row:last-child { border-bottom: none; }
+
+  .site-row-header {
+    display: grid;
+    grid-template-columns: 1fr 80px 80px 80px 80px 100px;
+    align-items: center;
+    padding: 11px 24px;
+    gap: 12px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .site-row-header span:hover { color: var(--text); }
+
+  .site-name {
+    font-size: 13px; font-weight: 600;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .site-name a {
+    color: var(--text); text-decoration: none;
+  }
+
+  .site-name a:hover { color: var(--accent); }
+
+  .site-kw-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; font-weight: 600;
+    text-align: center;
+  }
+
+  .site-top3-count { color: var(--top3); }
+  .site-top10-count { color: var(--top10); }
+  .site-top20-count { color: var(--top20); }
+  .site-total-count { color: var(--muted); }
+
+  .site-badges { display: flex; gap: 4px; flex-wrap: wrap; }
+
+  .site-badge {
+    padding: 2px 7px;
+    border-radius: 100px;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+
+  .site-badge-top3 { background: rgba(255,200,74,0.15); color: var(--top3); }
+  .site-badge-top10 { background: rgba(124,106,255,0.15); color: var(--top10); }
+  .site-badge-top20 { background: rgba(61,159,255,0.15); color: var(--top20); }
+
+  .no-top-rankings { color: var(--muted); font-size: 11px; }
 </style>
 </head>
 <body>
@@ -731,6 +893,15 @@
       <option value="all">All Domains</option>
     </select>
   </div>
+
+  <!-- Tab navigation -->
+  <div class="tab-nav">
+    <button class="tab-btn active" id="tab-btn-keywords" onclick="switchTab('keywords')">📊 Keywords View</button>
+    <button class="tab-btn" id="tab-btn-sites" onclick="switchTab('sites')">🌐 Sites View</button>
+  </div>
+
+  <!-- KEYWORDS TAB -->
+  <div class="tab-content active" id="tab-keywords">
 
   <!-- Stats -->
   <div class="stats-row" id="stats-row">
@@ -891,7 +1062,64 @@
       <div class="page-btns" id="page-btns"></div>
     </div>
   </div>
-</div>
+
+  </div><!-- end tab-keywords -->
+
+  <!-- SITES TAB -->
+  <div class="tab-content" id="tab-sites">
+
+    <!-- Sites summary stats -->
+    <div class="stats-row" style="margin-bottom:24px">
+      <div class="stat-card gold">
+        <div class="stat-label">Sites w/ Top 3</div>
+        <div class="stat-value" id="site-stat-top3">—</div>
+      </div>
+      <div class="stat-card purple">
+        <div class="stat-label">Sites w/ Top 10</div>
+        <div class="stat-value" id="site-stat-top10">—</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-label">Sites w/ Top 20</div>
+        <div class="stat-value" id="site-stat-top20">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Sites</div>
+        <div class="stat-value" id="site-stat-total" style="color:var(--text)">—</div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="sites-controls">
+      <input type="text" class="sites-search" id="sites-search" placeholder="Search domains..." oninput="renderSitesTable()">
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <div class="sites-filter-pill active" id="spill-all" onclick="setSitesFilter('all')">All Sites</div>
+        <div class="sites-filter-pill" id="spill-top3" onclick="setSitesFilter('top3')">🥇 Has Top 3</div>
+        <div class="sites-filter-pill" id="spill-top10" onclick="setSitesFilter('top10')">Has Top 10</div>
+        <div class="sites-filter-pill" id="spill-top20" onclick="setSitesFilter('top20')">Has Top 20</div>
+        <div class="sites-filter-pill" id="spill-none" onclick="setSitesFilter('none')">No Top Rankings</div>
+      </div>
+    </div>
+
+    <!-- Sites table -->
+    <div class="sites-table-section">
+      <div class="site-row-header">
+        <span onclick="sortSites('domain')">Domain ↕</span>
+        <span onclick="sortSites('top3')" style="text-align:center;color:var(--top3)">Top 3 ↕</span>
+        <span onclick="sortSites('top10')" style="text-align:center;color:var(--top10)">Top 10 ↕</span>
+        <span onclick="sortSites('top20')" style="text-align:center;color:var(--top20)">Top 20 ↕</span>
+        <span onclick="sortSites('total')" style="text-align:center">Keywords ↕</span>
+        <span>Status</span>
+      </div>
+      <div id="sites-table-body"></div>
+      <div class="pagination">
+        <span id="sites-pagination-info">—</span>
+        <div class="page-btns" id="sites-page-btns"></div>
+      </div>
+    </div>
+
+  </div><!-- end tab-sites -->
+
+</div><!-- end dashboard -->
 
 <script>
 // ─── STATE ───────────────────────────────────────────────────
@@ -903,6 +1131,15 @@ let sortField = 'change';
 let sortDir = -1;
 let currentPage = 1;
 const PAGE_SIZE = 50;
+
+// Sites state
+let sitesData = [];
+let filteredSites = [];
+let sitesFilter = 'all';
+let sitesSortField = 'top3';
+let sitesSortDir = -1;
+let sitesPage = 1;
+const SITES_PAGE_SIZE = 50;
 
 // ─── INIT ─────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
@@ -981,6 +1218,7 @@ async function loadData() {
 
     setLoadingText('Processing rank movements...');
     processAndRender();
+    buildSitesData();
     showDashboard();
 
   } catch (err) {
@@ -1302,11 +1540,124 @@ function escHtml(str) {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function chunkArray(arr, size) {
-  const out = [];
-  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
-  return out;
+// ─── SITES VIEW ──────────────────────────────────────────────
+function buildSitesData() {
+  const map = {};
+  allKeywords.forEach(kw => {
+    const key = kw.domainId;
+    if (!map[key]) {
+      map[key] = {
+        domainId: kw.domainId,
+        domain: kw.domainName,
+        top3: 0, top10: 0, top20: 0, total: 0
+      };
+    }
+    const s = map[key];
+    s.total++;
+    if (kw._inTop3) s.top3++;
+    if (kw._inTop10) s.top10++;
+    if (kw._inTop20) s.top20++;
+  });
+  sitesData = Object.values(map);
+
+  // Update summary stats
+  document.getElementById('site-stat-top3').textContent = sitesData.filter(s => s.top3 > 0).length;
+  document.getElementById('site-stat-top10').textContent = sitesData.filter(s => s.top10 > 0).length;
+  document.getElementById('site-stat-top20').textContent = sitesData.filter(s => s.top20 > 0).length;
+  document.getElementById('site-stat-total').textContent = sitesData.length;
+
+  renderSitesTable();
 }
+
+function setSitesFilter(f) {
+  sitesFilter = f;
+  sitesPage = 1;
+  ['all','top3','top10','top20','none'].forEach(x => {
+    const el = document.getElementById(`spill-${x}`);
+    if (!el) return;
+    el.className = 'sites-filter-pill' + (x === f ? (f === 'all' ? ' active' : ` active-${f === 'none' ? '' : f}`) : '');
+    if (x === f && f === 'none') el.className = 'sites-filter-pill active';
+  });
+  renderSitesTable();
+}
+
+function sortSites(field) {
+  if (sitesSortField === field) sitesSortDir *= -1;
+  else { sitesSortField = field; sitesSortDir = -1; }
+  renderSitesTable();
+}
+
+function renderSitesTable() {
+  const search = (document.getElementById('sites-search').value || '').toLowerCase();
+
+  filteredSites = sitesData.filter(s => {
+    if (search && !s.domain.toLowerCase().includes(search)) return false;
+    if (sitesFilter === 'top3' && s.top3 === 0) return false;
+    if (sitesFilter === 'top10' && s.top10 === 0) return false;
+    if (sitesFilter === 'top20' && s.top20 === 0) return false;
+    if (sitesFilter === 'none' && (s.top3 > 0 || s.top10 > 0 || s.top20 > 0)) return false;
+    return true;
+  });
+
+  // Sort
+  filteredSites.sort((a, b) => {
+    let av, bv;
+    if (sitesSortField === 'domain') { return sitesSortDir * a.domain.localeCompare(b.domain); }
+    av = a[sitesSortField] || 0; bv = b[sitesSortField] || 0;
+    return sitesSortDir * (av - bv);
+  });
+
+  const start = (sitesPage - 1) * SITES_PAGE_SIZE;
+  const page = filteredSites.slice(start, start + SITES_PAGE_SIZE);
+  const tbody = document.getElementById('sites-table-body');
+
+  tbody.innerHTML = page.map(s => {
+    const badges = [];
+    if (s.top3 > 0) badges.push(`<span class="site-badge site-badge-top3">Top 3</span>`);
+    if (s.top10 > 0 && s.top3 === 0) badges.push(`<span class="site-badge site-badge-top10">Top 10</span>`);
+    if (s.top20 > 0 && s.top10 === 0) badges.push(`<span class="site-badge site-badge-top20">Top 20</span>`);
+    const statusHtml = badges.length ? `<div class="site-badges">${badges.join('')}</div>` : `<span class="no-top-rankings">No top rankings</span>`;
+
+    return `<div class="site-row">
+      <div class="site-name"><a href="https://${escHtml(s.domain)}" target="_blank">${escHtml(s.domain)}</a></div>
+      <div class="site-kw-count site-top3-count" style="text-align:center">${s.top3 || '—'}</div>
+      <div class="site-kw-count site-top10-count" style="text-align:center">${s.top10 || '—'}</div>
+      <div class="site-kw-count site-top20-count" style="text-align:center">${s.top20 || '—'}</div>
+      <div class="site-kw-count site-total-count" style="text-align:center">${s.total}</div>
+      <div>${statusHtml}</div>
+    </div>`;
+  }).join('');
+
+  const total = filteredSites.length;
+  const totalPages = Math.ceil(total / SITES_PAGE_SIZE);
+  document.getElementById('sites-pagination-info').textContent = `Showing ${Math.min(start+1,total)}–${Math.min(start+SITES_PAGE_SIZE, total)} of ${total} sites`;
+
+  const sitesPageBtns = document.getElementById('sites-page-btns');
+  sitesPageBtns.innerHTML = '';
+  if (totalPages <= 1) return;
+  const addBtn = (label, page, active, disabled) => {
+    const b = document.createElement('button');
+    b.className = 'page-btn' + (active ? ' active' : '');
+    b.textContent = label; b.disabled = disabled;
+    b.onclick = () => { sitesPage = page; renderSitesTable(); };
+    sitesPageBtns.appendChild(b);
+  };
+  addBtn('←', sitesPage - 1, false, sitesPage === 1);
+  const sp = Math.max(1, sitesPage - 2), ep = Math.min(totalPages, sp + 4);
+  for (let i = sp; i <= ep; i++) addBtn(i, i, i === sitesPage, false);
+  addBtn('→', sitesPage + 1, false, sitesPage === totalPages);
+}
+
+// ─── TAB SWITCHING ────────────────────────────────────────────
+function switchTab(tab) {
+  ['keywords', 'sites'].forEach(t => {
+    document.getElementById(`tab-content-${t}`) || document.getElementById(`tab-${t}`);
+    document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
+    document.getElementById(`tab-btn-${t}`).classList.toggle('active', t === tab);
+  });
+  if (tab === 'sites' && sitesData.length === 0 && allKeywords.length > 0) buildSitesData();
+}
+
 </script>
 </body>
 </html>
