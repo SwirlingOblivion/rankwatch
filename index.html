@@ -1286,24 +1286,16 @@ async function loadData(forceRefresh = false) {
     const domainMap = {};
     domains.forEach(d => { domainMap[d.id] = d.display_name || d.domain; });
 
-    // Fetch ALL keywords via account-level paginated endpoint
+    // Fetch keywords per domain with rate limiting
     allKeywords = [];
-    let kwUrl = '/api/v4/keywords/?page_size=500';
-    let page = 1;
-    while (kwUrl) {
-      setLoadingText(`Loading keywords... ${allKeywords.length} loaded`);
-      const data = await arFetch(kwUrl);
-      const results = data.results || data;
-      results.forEach(kw => {
-        allKeywords.push({
-          ...kw,
-          domainId: kw.domain,
-          domainName: domainMap[kw.domain] || kw.domain || 'Unknown'
-        });
-      });
-      kwUrl = data.next ? data.next.replace('https://app.accuranker.com', '') : null;
-      page++;
-      if (kwUrl) await sleep(600);
+    const chunks = chunkArray(domains, 3);
+    let loaded = 0;
+    for (const chunk of chunks) {
+      const results = await Promise.all(chunk.map(d => fetchKeywordsForDomain(d)));
+      results.forEach(kws => allKeywords.push(...kws));
+      loaded += chunk.length;
+      setLoadingText(`Loading keywords... ${loaded}/${domains.length} domains (${allKeywords.length} keywords found)`);
+      if (loaded < domains.length) await sleep(700);
     }
 
     setLoadingText('Processing rank movements...');
@@ -1337,13 +1329,20 @@ function populateDomainFilter(domains) {
 
 async function fetchKeywordsForDomain(domain, retries = 3) {
   try {
-    // Request without fields filter so we get everything AccuRanker returns
     const data = await arFetch(`/api/v4/domains/${domain.id}/keywords/?page_size=500`);
     const kws = data.results || data;
-    return kws.map(kw => ({ ...kw, domainId: domain.id, domainName: domain.display_name || domain.domain }));
+    // Log first keyword from first domain to see real field names
+    if (allKeywords.length === 0 && kws.length > 0) {
+      console.log('SAMPLE KEYWORD FIELDS:', JSON.stringify(kws[0], null, 2));
+    }
+    return kws.map(kw => ({
+      ...kw,
+      domainId: domain.id,
+      domainName: domain.display_name || domain.domain
+    }));
   } catch(e) {
-    if (retries > 0 && e.message.includes('429')) {
-      await sleep(2000);
+    if (retries > 0 && (e.message.includes('429') || e.message.includes('502'))) {
+      await sleep(3000);
       return fetchKeywordsForDomain(domain, retries - 1);
     }
     return [];
