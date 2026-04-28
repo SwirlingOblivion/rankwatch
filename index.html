@@ -1312,8 +1312,8 @@ async function loadData(forceRefresh = false) {
 
 async function fetchKeywordsForDomain(domain, retries = 3) {
   try {
-    const fields = 'id,keyword,rank,rank_compare,search_volume,landing_page,tags';
-    const data = await arFetch(`/api/v4/domains/${domain.id}/keywords/?fields=${fields}&page_size=500`);
+    // Request without fields filter so we get everything AccuRanker returns
+    const data = await arFetch(`/api/v4/domains/${domain.id}/keywords/?page_size=500`);
     const kws = data.results || data;
     return kws.map(kw => ({ ...kw, domainId: domain.id, domainName: domain.display_name || domain.domain }));
   } catch(e) {
