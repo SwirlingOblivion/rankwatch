@@ -6,976 +6,248 @@
 <title>The Money Maker</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0a0a0f;
-    --surface: #111118;
-    --surface2: #1a1a24;
-    --border: #2a2a3a;
-    --text: #e8e8f0;
-    --muted: #6b6b8a;
-    --accent: #7c6aff;
-    --accent2: #ff6a6a;
-    --up: #3dffa0;
-    --down: #ff5c5c;
-    --neutral: #6b6b8a;
-    --gold: #ffc84a;
-    --top3: #ffc84a;
-    --top10: #7c6aff;
-    --top20: #3d9fff;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Syne', sans-serif;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  body::before {
-    content: '';
-    position: fixed;
-    top: -200px; left: -200px;
-    width: 600px; height: 600px;
-    background: radial-gradient(circle, rgba(124,106,255,0.08) 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* HEADER */
-  header {
-    position: sticky; top: 0; z-index: 100;
-    background: rgba(10,10,15,0.85);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--border);
-    padding: 0 32px;
-    display: flex; align-items: center; justify-content: space-between;
-    height: 64px;
-  }
-
-  .logo {
-    font-size: 20px; font-weight: 800; letter-spacing: -0.5px;
-    display: flex; align-items: center; gap: 10px;
-  }
-
-  .logo-dot {
-    width: 10px; height: 10px;
-    background: var(--accent);
-    border-radius: 50%;
-    box-shadow: 0 0 12px var(--accent);
-    animation: pulse 2s infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.6; transform: scale(0.8); }
-  }
-
-  .header-right {
-    display: flex; align-items: center; gap: 16px;
-  }
-
-  .last-updated {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px; color: var(--muted);
-  }
-
-  .refresh-btn {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-family: 'Syne', sans-serif;
-    font-size: 13px; font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex; align-items: center; gap: 8px;
-  }
-
-  .refresh-btn:hover { background: var(--border); border-color: var(--accent); color: var(--accent); }
-  .refresh-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-  .refresh-icon { transition: transform 0.6s; }
-  .refresh-btn.spinning .refresh-icon { animation: spin 1s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* SETUP SCREEN */
-  #setup-screen {
-    display: flex; align-items: center; justify-content: center;
-    min-height: calc(100vh - 64px);
-    padding: 40px;
-  }
-
-  .setup-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 48px;
-    max-width: 480px; width: 100%;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .setup-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, var(--accent), #b06aff, var(--top3));
-  }
-
-  .setup-title { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
-  .setup-sub { color: var(--muted); font-size: 14px; margin-bottom: 32px; line-height: 1.6; }
-
-  .field-label {
-    font-size: 12px; font-weight: 700; letter-spacing: 0.08em;
-    text-transform: uppercase; color: var(--muted);
-    margin-bottom: 8px;
-  }
-
-  .api-input {
-    width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 16px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    color: var(--text);
-    outline: none;
-    transition: border-color 0.2s;
-    margin-bottom: 24px;
-  }
-
-  .api-input:focus { border-color: var(--accent); }
-  .api-input::placeholder { color: var(--muted); }
-
-  .connect-btn {
-    width: 100%;
-    background: var(--accent);
-    color: white;
-    border: none;
-    border-radius: 10px;
-    padding: 16px;
-    font-family: 'Syne', sans-serif;
-    font-size: 15px; font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .connect-btn:hover { background: #9580ff; transform: translateY(-1px); }
-  .connect-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-  .setup-hint {
-    margin-top: 20px;
-    padding: 14px 16px;
-    background: rgba(124,106,255,0.08);
-    border: 1px solid rgba(124,106,255,0.2);
-    border-radius: 10px;
-    font-size: 13px; color: var(--muted); line-height: 1.6;
-  }
-
-  .setup-hint a { color: var(--accent); text-decoration: none; }
-  .setup-hint a:hover { text-decoration: underline; }
-
-  .error-msg {
-    margin-top: 16px;
-    padding: 12px 16px;
-    background: rgba(255,92,92,0.1);
-    border: 1px solid rgba(255,92,92,0.3);
-    border-radius: 8px;
-    font-size: 13px; color: var(--down);
-    display: none;
-  }
-
-  /* MAIN DASHBOARD */
-  #dashboard { display: none; padding: 32px; max-width: 1400px; margin: 0 auto; }
-
-  /* STAT CARDS */
-  .stats-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 16px;
-    margin-bottom: 32px;
-  }
-
-  .stat-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 20px;
-    position: relative;
-    overflow: hidden;
-    transition: border-color 0.2s;
-  }
-
-  .stat-card:hover { border-color: var(--accent); }
-
-  .stat-label {
-    font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
-    text-transform: uppercase; color: var(--muted);
-    margin-bottom: 10px;
-  }
-
-  .stat-value {
-    font-size: 32px; font-weight: 800;
-    line-height: 1;
-    font-family: 'JetBrains Mono', monospace;
-  }
-
-  .stat-card.up .stat-value { color: var(--up); }
-  .stat-card.down .stat-value { color: var(--down); }
-  .stat-card.gold .stat-value { color: var(--gold); }
-  .stat-card.purple .stat-value { color: var(--accent); }
-  .stat-card.blue .stat-value { color: var(--top20); }
-
-  /* DOMAIN FILTER */
-  .section-header {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
-  }
-
-  .section-title {
-    font-size: 18px; font-weight: 800;
-    display: flex; align-items: center; gap: 10px;
-  }
-
-  .badge {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    padding: 3px 10px;
-    border-radius: 100px;
-    font-size: 12px;
-    font-family: 'JetBrains Mono', monospace;
-    color: var(--muted);
-  }
-
-  .filters {
-    display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
-  }
-
-  .filter-select {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 8px 14px;
-    border-radius: 8px;
-    font-family: 'Syne', sans-serif;
-    font-size: 13px;
-    outline: none;
-    cursor: pointer;
-  }
-
-  .filter-select:focus { border-color: var(--accent); }
-
-  .pill-group {
-    display: flex; gap: 6px;
-  }
-
-  .pill {
-    padding: 7px 14px;
-    border-radius: 100px;
-    font-size: 12px; font-weight: 700;
-    cursor: pointer;
-    border: 1px solid var(--border);
-    background: var(--surface2);
-    color: var(--muted);
-    transition: all 0.15s;
-    white-space: nowrap;
-  }
-
-  .pill:hover { color: var(--text); border-color: var(--muted); }
-  .pill.active-all { background: var(--surface2); color: var(--text); border-color: var(--text); }
-  .pill.active-up { background: rgba(61,255,160,0.1); color: var(--up); border-color: var(--up); }
-  .pill.active-down { background: rgba(255,92,92,0.1); color: var(--down); border-color: var(--down); }
-  .pill.active-top3 { background: rgba(255,200,74,0.1); color: var(--top3); border-color: var(--top3); }
-  .pill.active-top10 { background: rgba(124,106,255,0.1); color: var(--top10); border-color: var(--top10); }
-  .pill.active-top20 { background: rgba(61,159,255,0.1); color: var(--top20); border-color: var(--top20); }
-
-  /* MOVERS SECTION */
-  .movers-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-    margin-bottom: 32px;
-  }
-
-  @media (max-width: 900px) { .movers-grid { grid-template-columns: 1fr; } }
-
-  .movers-panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    overflow: hidden;
-  }
-
-  .movers-panel-header {
-    padding: 16px 20px;
-    display: flex; align-items: center; justify-content: space-between;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .movers-panel-title {
-    font-size: 13px; font-weight: 800;
-    letter-spacing: 0.05em; text-transform: uppercase;
-    display: flex; align-items: center; gap: 8px;
-  }
-
-  .threshold-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-  }
-
-  .panel-count {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px; color: var(--muted);
-  }
-
-  .movers-list { max-height: 320px; overflow-y: auto; }
-  .movers-list::-webkit-scrollbar { width: 4px; }
-  .movers-list::-webkit-scrollbar-track { background: transparent; }
-  .movers-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-  .mover-item {
-    padding: 12px 20px;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
-    display: flex; align-items: center; gap: 12px;
-    transition: background 0.15s;
-  }
-
-  .mover-item:hover { background: rgba(255,255,255,0.02); }
-  .mover-item:last-child { border-bottom: none; }
-
-  .mover-direction {
-    width: 28px; height: 28px;
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 13px;
-    flex-shrink: 0;
-  }
-
-  .mover-direction.entered { background: rgba(61,255,160,0.1); }
-  .mover-direction.exited { background: rgba(255,92,92,0.1); }
-
-  .mover-info { flex: 1; min-width: 0; }
-
-  .mover-keyword {
-    font-size: 13px; font-weight: 600;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-
-  .mover-domain {
-    font-size: 11px; color: var(--muted);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    margin-top: 2px;
-    font-family: 'JetBrains Mono', monospace;
-  }
-
-  .mover-ranks {
-    text-align: right; flex-shrink: 0;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-  }
-
-  .rank-from { color: var(--muted); text-decoration: line-through; }
-  .rank-to { font-size: 15px; font-weight: 700; margin-top: 2px; }
-  .rank-to.up { color: var(--up); }
-  .rank-to.down { color: var(--down); }
-
-  .empty-panel {
-    padding: 40px 20px;
-    text-align: center;
-    color: var(--muted);
-    font-size: 13px;
-  }
-
-  .empty-icon { font-size: 28px; margin-bottom: 8px; }
-
-  /* FULL KEYWORDS TABLE */
-  .table-section {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    overflow: hidden;
-    margin-bottom: 32px;
-  }
-
-  .table-header {
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
-  }
-
-  .search-input {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 8px 14px;
-    font-family: 'Syne', sans-serif;
-    font-size: 13px;
-    color: var(--text);
-    outline: none;
-    width: 220px;
-    transition: border-color 0.2s;
-  }
-
-  .search-input:focus { border-color: var(--accent); }
-  .search-input::placeholder { color: var(--muted); }
-
-  table { width: 100%; border-collapse: collapse; }
-
-  th {
-    padding: 12px 24px;
-    text-align: left;
-    font-size: 11px; font-weight: 700;
-    letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--muted);
-    background: var(--surface2);
-    border-bottom: 1px solid var(--border);
-    cursor: pointer;
-    user-select: none;
-    white-space: nowrap;
-  }
-
-  th:hover { color: var(--text); }
-
-  td {
-    padding: 13px 24px;
-    font-size: 13px;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
-    vertical-align: middle;
-  }
-
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: rgba(255,255,255,0.02); }
-
-  .kw-cell { font-weight: 600; max-width: 240px; }
-  .domain-cell {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px; color: var(--muted);
-  }
-
-  .rank-cell {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 14px; font-weight: 600;
-  }
-
-  .change-cell {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px; font-weight: 700;
-    display: flex; align-items: center; gap: 5px;
-  }
-
-  .change-cell.pos { color: var(--up); }
-  .change-cell.neg { color: var(--down); }
-  .change-cell.zero { color: var(--muted); }
-
-  .threshold-tags { display: flex; gap: 5px; flex-wrap: wrap; }
-
-  .threshold-tag {
-    padding: 3px 8px;
-    border-radius: 100px;
-    font-size: 10px; font-weight: 700;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-
-  .tag-top3 { background: rgba(255,200,74,0.15); color: var(--top3); }
-  .tag-top10 { background: rgba(124,106,255,0.15); color: var(--top10); }
-  .tag-top20 { background: rgba(61,159,255,0.15); color: var(--top20); }
-
-  .vol-cell {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px; color: var(--muted);
-  }
-
-  /* LOADING */
-  #loading-screen {
-    display: none;
-    align-items: center; justify-content: center;
-    min-height: calc(100vh - 64px);
-    flex-direction: column; gap: 20px;
-  }
-
-  .loader {
-    width: 48px; height: 48px;
-    border: 3px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-
-  .loading-text { color: var(--muted); font-size: 14px; }
-
-  /* BIG MOVERS */
-  .big-movers-section {
-    margin-bottom: 32px;
-  }
-
-  .big-movers-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-  }
-
-  @media (max-width: 700px) { .big-movers-grid { grid-template-columns: 1fr; } }
-
-  .big-movers-panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    overflow: hidden;
-  }
-
-  .big-movers-panel.winners { border-color: rgba(61,255,160,0.2); }
-  .big-movers-panel.losers { border-color: rgba(255,92,92,0.2); }
-
-  .big-movers-panel-header {
-    padding: 16px 20px;
-    display: flex; align-items: center; justify-content: space-between;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .big-movers-panel.winners .big-movers-panel-header {
-    background: rgba(61,255,160,0.04);
-  }
-
-  .big-movers-panel.losers .big-movers-panel-header {
-    background: rgba(255,92,92,0.04);
-  }
-
-  .big-mover-item {
-    padding: 12px 20px;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
-    display: flex; align-items: center; gap: 12px;
-    transition: background 0.15s;
-  }
-
-  .big-mover-item:hover { background: rgba(255,255,255,0.02); }
-  .big-mover-item:last-child { border-bottom: none; }
-
-  .big-mover-badge {
-    min-width: 48px;
-    padding: 4px 8px;
-    border-radius: 8px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px; font-weight: 700;
-    text-align: center;
-    flex-shrink: 0;
-  }
-
-  .big-mover-badge.up { background: rgba(61,255,160,0.12); color: var(--up); }
-  .big-mover-badge.down { background: rgba(255,92,92,0.12); color: var(--down); }
-
-  .fire-badge {
-    display: inline-flex; align-items: center; gap: 4px;
-    padding: 2px 8px;
-    border-radius: 100px;
-    font-size: 10px; font-weight: 700;
-    letter-spacing: 0.05em; text-transform: uppercase;
-    flex-shrink: 0;
-  }
-
-  .fire-badge.hot { background: rgba(61,255,160,0.12); color: var(--up); }
-  .fire-badge.danger { background: rgba(255,92,92,0.12); color: var(--down); }
-
-  /* WINS BAR */
-  .wins-bar {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 20px 24px;
-    margin-bottom: 32px;
-    display: flex; align-items: center; gap: 20px;
-    flex-wrap: wrap;
-  }
-
-  .wins-bar-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; }
-
-  .wins-bar-track {
-    flex: 1; min-width: 200px;
-    height: 10px;
-    background: var(--bg);
-    border-radius: 100px;
-    overflow: hidden;
-    border: 1px solid var(--border);
-    position: relative;
-  }
-
-  .wins-bar-fill {
-    height: 100%;
-    border-radius: 100px;
-    background: linear-gradient(90deg, var(--up), #7c6aff);
-    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
-  }
-
-  .wins-bar-stats {
-    display: flex; gap: 20px; flex-wrap: wrap;
-  }
-
-  .wins-stat { font-family: 'JetBrains Mono', monospace; font-size: 13px; }
-  .wins-stat .val { font-weight: 700; }
-  .wins-stat .val.up { color: var(--up); }
-  .wins-stat .val.down { color: var(--down); }
-  .wins-stat .lbl { color: var(--muted); font-size: 11px; margin-left: 4px; }
-
-  /* PAGINATION */
-  .pagination {
-    padding: 16px 24px;
-    border-top: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between;
-    font-size: 13px; color: var(--muted);
-  }
-
-  .page-btns { display: flex; gap: 8px; }
-
-  .page-btn {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 6px 14px;
-    border-radius: 6px;
-    font-family: 'Syne', sans-serif;
-    font-size: 12px; font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-
-  .page-btn:hover { border-color: var(--accent); color: var(--accent); }
-  .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-  .page-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
-
-  /* SETTINGS BAR */
-  .settings-bar {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 16px 20px;
-    margin-bottom: 24px;
-    display: flex; align-items: center; gap: 16px;
-    flex-wrap: wrap;
-  }
-
-  .settings-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
-
-  .api-key-display {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px; color: var(--muted);
-    background: var(--bg);
-    border: 1px solid var(--border);
-    padding: 6px 12px;
-    border-radius: 6px;
-  }
-
-  .change-key-btn {
-    background: none; border: 1px solid var(--border);
-    color: var(--muted); padding: 6px 12px;
-    border-radius: 6px; font-family: 'Syne', sans-serif;
-    font-size: 12px; cursor: pointer; transition: all 0.15s;
-  }
-
-  .change-key-btn:hover { color: var(--text); border-color: var(--muted); }
-
-  .spacer { flex: 1; }
-
-  /* TABS */
-  .tab-nav {
-    display: flex; gap: 4px;
-    margin-bottom: 28px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 5px;
-    width: fit-content;
-  }
-
-  .tab-btn {
-    padding: 9px 22px;
-    border-radius: 8px;
-    font-family: 'Syne', sans-serif;
-    font-size: 13px; font-weight: 700;
-    cursor: pointer;
-    border: none;
-    background: none;
-    color: var(--muted);
-    transition: all 0.15s;
-    display: flex; align-items: center; gap: 8px;
-  }
-
-  .tab-btn:hover { color: var(--text); }
-
-  .tab-btn.active {
-    background: var(--surface2);
-    color: var(--text);
-    border: 1px solid var(--border);
-  }
-
-  .tab-content { display: none; }
-  .tab-content.active { display: block; }
-
-  /* SITES VIEW */
-  .sites-controls {
-    display: flex; gap: 12px; align-items: center;
-    margin-bottom: 20px; flex-wrap: wrap;
-  }
-
-  .sites-search {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 9px 14px;
-    font-family: 'Syne', sans-serif;
-    font-size: 13px; color: var(--text);
-    outline: none; width: 260px;
-    transition: border-color 0.2s;
-  }
-
-  .sites-search:focus { border-color: var(--accent); }
-  .sites-search::placeholder { color: var(--muted); }
-
-  .sites-filter-pill {
-    padding: 8px 16px;
-    border-radius: 100px;
-    font-size: 12px; font-weight: 700;
-    cursor: pointer;
-    border: 1px solid var(--border);
-    background: var(--surface2);
-    color: var(--muted);
-    transition: all 0.15s;
-    white-space: nowrap;
-  }
-
-  .sites-filter-pill:hover { color: var(--text); }
-  .sites-filter-pill.active { background: var(--surface2); color: var(--text); border-color: var(--text); }
-  .sites-filter-pill.active-top3 { background: rgba(255,200,74,0.1); color: var(--top3); border-color: var(--top3); }
-  .sites-filter-pill.active-top10 { background: rgba(124,106,255,0.1); color: var(--top10); border-color: var(--top10); }
-  .sites-filter-pill.active-top20 { background: rgba(61,159,255,0.1); color: var(--top20); border-color: var(--top20); }
-
-  .sites-table-section {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    overflow: hidden;
-    margin-bottom: 32px;
-  }
-
-  .sites-table-header {
-    padding: 18px 24px;
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between;
-  }
-
-  .sites-summary {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 16px;
-    margin-bottom: 28px;
-  }
-
-  .site-row {
-    display: grid;
-    grid-template-columns: 1fr 80px 80px 80px 80px 100px;
-    align-items: center;
-    padding: 13px 24px;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
-    transition: background 0.15s;
-    gap: 12px;
-  }
-
-  .site-row:hover { background: rgba(255,255,255,0.02); }
-  .site-row:last-child { border-bottom: none; }
-
-  .site-row-header {
-    display: grid;
-    grid-template-columns: 1fr 80px 80px 80px 80px 100px;
-    align-items: center;
-    padding: 11px 24px;
-    gap: 12px;
-    background: var(--surface2);
-    border-bottom: 1px solid var(--border);
-    font-size: 11px; font-weight: 700;
-    letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--muted);
-    cursor: pointer;
-    user-select: none;
-  }
-
-  .site-row-header span:hover { color: var(--text); }
-
-  .site-name {
-    font-size: 13px; font-weight: 600;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    font-family: 'JetBrains Mono', monospace;
-  }
-
-  .site-name a {
-    color: var(--text); text-decoration: none;
-  }
-
-  .site-name a:hover { color: var(--accent); }
-
-  .site-kw-count {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px; font-weight: 600;
-    text-align: center;
-  }
-
-  .site-top3-count { color: var(--top3); }
-  .site-top10-count { color: var(--top10); }
-  .site-top20-count { color: var(--top20); }
-  .site-total-count { color: var(--muted); }
-
-  .site-badges { display: flex; gap: 4px; flex-wrap: wrap; }
-
-  .site-badge {
-    padding: 2px 7px;
-    border-radius: 100px;
-    font-size: 10px; font-weight: 700;
-    letter-spacing: 0.04em;
-  }
-
-  .site-badge-top3 { background: rgba(255,200,74,0.15); color: var(--top3); }
-  .site-badge-top10 { background: rgba(124,106,255,0.15); color: var(--top10); }
-  .site-badge-top20 { background: rgba(61,159,255,0.15); color: var(--top20); }
-
-  .no-top-rankings { color: var(--muted); font-size: 11px; }
-
-  /* OPPORTUNITIES TAB */
-  .opp-header {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 20px 24px;
-    margin-bottom: 24px;
-    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
-  }
-
-  .ahrefs-key-input {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 9px 14px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px; color: var(--text);
-    outline: none; width: 280px;
-    transition: border-color 0.2s;
-  }
-
-  .ahrefs-key-input:focus { border-color: var(--accent); }
-  .ahrefs-key-input::placeholder { color: var(--muted); }
-
-  .fetch-ahrefs-btn {
-    background: linear-gradient(135deg, #ff6b35, #f7931e);
-    color: white; border: none;
-    border-radius: 8px; padding: 10px 20px;
-    font-family: 'Syne', sans-serif;
-    font-size: 13px; font-weight: 700;
-    cursor: pointer; transition: all 0.2s;
-    display: flex; align-items: center; gap: 8px;
-    white-space: nowrap;
-  }
-
-  .fetch-ahrefs-btn:hover { transform: translateY(-1px); opacity: 0.9; }
-  .fetch-ahrefs-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-  .ahrefs-status {
-    font-size: 12px; color: var(--muted);
-    font-family: 'JetBrains Mono', monospace;
-  }
-
-  .ahrefs-status.ok { color: var(--up); }
-  .ahrefs-status.err { color: var(--down); }
-
-  .opp-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 16px; margin-bottom: 24px;
-  }
-
-  .opp-table-section {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    overflow: hidden;
-    margin-bottom: 32px;
-  }
-
-  .opp-row {
-    display: grid;
-    grid-template-columns: 1fr 120px 70px 80px 80px 100px 120px;
-    align-items: center;
-    padding: 13px 24px;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
-    transition: background 0.15s;
-    gap: 12px;
-  }
-
-  .opp-row:hover { background: rgba(255,255,255,0.02); }
-  .opp-row:last-child { border-bottom: none; }
-
-  .opp-row-header {
-    display: grid;
-    grid-template-columns: 1fr 120px 70px 80px 80px 100px 120px;
-    align-items: center;
-    padding: 11px 24px;
-    gap: 12px;
-    background: var(--surface2);
-    border-bottom: 1px solid var(--border);
-    font-size: 11px; font-weight: 700;
-    letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--muted);
-    cursor: pointer; user-select: none;
-  }
-
-  .opp-row-header span:hover { color: var(--text); }
-
-  .opp-label {
-    display: inline-flex; align-items: center; gap: 5px;
-    padding: 4px 10px; border-radius: 100px;
-    font-size: 11px; font-weight: 700;
-    letter-spacing: 0.04em; white-space: nowrap;
-  }
-
-  .opp-protect { background: rgba(255,200,74,0.15); color: var(--top3); }
-  .opp-push { background: rgba(124,106,255,0.15); color: var(--accent); }
-  .opp-quickwin { background: rgba(61,255,160,0.15); color: var(--up); }
-  .opp-build { background: rgba(61,159,255,0.15); color: var(--top20); }
-
-  .opp-score {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 14px; font-weight: 700;
-    color: var(--accent);
-  }
-
-  .kd-bar {
-    display: flex; align-items: center; gap: 6px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-  }
-
-  .kd-dot {
-    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
-  }
-
-  .kd-easy { background: var(--up); }
-  .kd-medium { background: var(--gold); }
-  .kd-hard { background: var(--down); }
-
-  .opp-filters {
-    display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
-    margin-bottom: 20px;
-  }
+:root {
+  --bg:#0a0a0f; --surface:#111118; --surface2:#1a1a24; --border:#2a2a3a;
+  --text:#e8e8f0; --muted:#6b6b8a; --accent:#7c6aff; --up:#3dffa0;
+  --down:#ff5c5c; --gold:#ffc84a; --top3:#ffc84a; --top10:#7c6aff; --top20:#3d9fff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;top:-200px;left:-200px;width:600px;height:600px;background:radial-gradient(circle,rgba(124,106,255,.08) 0%,transparent 70%);pointer-events:none;z-index:0}
+
+/* HEADER */
+header{position:sticky;top:0;z-index:100;background:rgba(10,10,15,.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:64px}
+.logo{font-size:20px;font-weight:800;letter-spacing:-.5px;display:flex;align-items:center;gap:10px}
+.logo-dot{width:10px;height:10px;background:var(--accent);border-radius:50%;box-shadow:0 0 12px var(--accent);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.8)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.header-right{display:flex;align-items:center;gap:16px}
+.last-updated{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)}
+.refresh-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 16px;border-radius:8px;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px}
+.refresh-btn:hover{background:var(--border);border-color:var(--accent);color:var(--accent)}
+.refresh-btn:disabled{opacity:.4;cursor:not-allowed}
+.refresh-icon{transition:transform .6s}
+.refresh-btn.spinning .refresh-icon{animation:spin 1s linear infinite}
+
+/* SETUP */
+#setup-screen{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 64px);padding:40px}
+.setup-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:48px;max-width:480px;width:100%;position:relative;overflow:hidden}
+.setup-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),#b06aff,var(--top3))}
+.setup-title{font-size:28px;font-weight:800;margin-bottom:8px}
+.setup-sub{color:var(--muted);font-size:14px;margin-bottom:32px;line-height:1.6}
+.field-label{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.api-input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px 16px;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text);outline:none;transition:border-color .2s;margin-bottom:24px}
+.api-input:focus{border-color:var(--accent)}
+.api-input::placeholder{color:var(--muted)}
+.connect-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:16px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s}
+.connect-btn:hover{background:#9580ff;transform:translateY(-1px)}
+.connect-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.setup-hint{margin-top:20px;padding:14px 16px;background:rgba(124,106,255,.08);border:1px solid rgba(124,106,255,.2);border-radius:10px;font-size:13px;color:var(--muted);line-height:1.6}
+.error-msg{margin-top:16px;padding:12px 16px;background:rgba(255,92,92,.1);border:1px solid rgba(255,92,92,.3);border-radius:8px;font-size:13px;color:var(--down);display:none}
+
+/* LOADING */
+#loading-screen{display:none;align-items:center;justify-content:center;min-height:calc(100vh - 64px);flex-direction:column;gap:20px}
+.loader{width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+.loading-text{color:var(--muted);font-size:14px}
+
+/* DASHBOARD */
+#dashboard{display:none;padding:32px;max-width:1400px;margin:0 auto}
+
+/* SHARED COMPONENTS */
+.settings-bar{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 20px;margin-bottom:24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.settings-label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.api-key-display{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);background:var(--bg);border:1px solid var(--border);padding:6px 12px;border-radius:6px}
+.change-key-btn{background:none;border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:6px;font-family:'Syne',sans-serif;font-size:12px;cursor:pointer;transition:all .15s}
+.change-key-btn:hover{color:var(--text);border-color:var(--muted)}
+.spacer{flex:1}
+.badge{background:var(--surface2);border:1px solid var(--border);padding:3px 10px;border-radius:100px;font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--muted)}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+.section-title{font-size:18px;font-weight:800;display:flex;align-items:center;gap:10px}
+.filter-select{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:8px;font-family:'Syne',sans-serif;font-size:13px;outline:none;cursor:pointer}
+.filter-select:focus{border-color:var(--accent)}
+.search-input{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-family:'Syne',sans-serif;font-size:13px;color:var(--text);outline:none;width:220px;transition:border-color .2s}
+.search-input:focus{border-color:var(--accent)}
+.search-input::placeholder{color:var(--muted)}
+.pill-group{display:flex;gap:6px;flex-wrap:wrap}
+.pill{padding:7px 14px;border-radius:100px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--muted);transition:all .15s;white-space:nowrap}
+.pill:hover{color:var(--text);border-color:var(--muted)}
+.pill.active-all{color:var(--text);border-color:var(--text)}
+.pill.active-up{background:rgba(61,255,160,.1);color:var(--up);border-color:var(--up)}
+.pill.active-down{background:rgba(255,92,92,.1);color:var(--down);border-color:var(--down)}
+.pill.active-top3{background:rgba(255,200,74,.1);color:var(--top3);border-color:var(--top3)}
+.pill.active-top10{background:rgba(124,106,255,.1);color:var(--top10);border-color:var(--top10)}
+.pill.active-top20{background:rgba(61,159,255,.1);color:var(--top20);border-color:var(--top20)}
+.empty-panel{padding:40px 20px;text-align:center;color:var(--muted);font-size:13px}
+.empty-icon{font-size:28px;margin-bottom:8px}
+
+/* STAT CARDS */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:32px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;transition:border-color .2s}
+.stat-card:hover{border-color:var(--accent)}
+.stat-label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.stat-value{font-size:32px;font-weight:800;line-height:1;font-family:'JetBrains Mono',monospace}
+.stat-card.up .stat-value{color:var(--up)}
+.stat-card.down .stat-value{color:var(--down)}
+.stat-card.gold .stat-value{color:var(--gold)}
+.stat-card.purple .stat-value{color:var(--accent)}
+.stat-card.blue .stat-value{color:var(--top20)}
+
+/* TABS */
+.tab-nav{display:flex;gap:4px;margin-bottom:28px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:5px;width:fit-content}
+.tab-btn{padding:9px 22px;border-radius:8px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;border:none;background:none;color:var(--muted);transition:all .15s;display:flex;align-items:center;gap:8px}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* WINS BAR */
+.wins-bar{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 24px;margin-bottom:32px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.wins-bar-label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap}
+.wins-bar-track{flex:1;min-width:200px;height:10px;background:var(--bg);border-radius:100px;overflow:hidden;border:1px solid var(--border)}
+.wins-bar-fill{height:100%;border-radius:100px;background:linear-gradient(90deg,var(--up),#7c6aff);transition:width .6s cubic-bezier(.4,0,.2,1)}
+.wins-bar-stats{display:flex;gap:20px;flex-wrap:wrap}
+.wins-stat{font-family:'JetBrains Mono',monospace;font-size:13px}
+.wins-stat .val{font-weight:700}
+.wins-stat .val.up{color:var(--up)}
+.wins-stat .val.down{color:var(--down)}
+.wins-stat .lbl{color:var(--muted);font-size:11px;margin-left:4px}
+
+/* MOVER PANELS */
+.movers-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:32px}
+@media(max-width:900px){.movers-grid{grid-template-columns:1fr}}
+.movers-panel,.big-movers-panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.big-movers-panel.winners{border-color:rgba(61,255,160,.2)}
+.big-movers-panel.losers{border-color:rgba(255,92,92,.2)}
+.movers-panel-header,.big-movers-panel-header{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.big-movers-panel.winners .big-movers-panel-header{background:rgba(61,255,160,.04)}
+.big-movers-panel.losers .big-movers-panel-header{background:rgba(255,92,92,.04)}
+.movers-panel-title{font-size:13px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.threshold-dot{width:8px;height:8px;border-radius:50%}
+.panel-count{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted)}
+.movers-list{max-height:320px;overflow-y:auto}
+.movers-list::-webkit-scrollbar{width:4px}
+.movers-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.mover-item,.big-mover-item{padding:12px 20px;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:12px;transition:background .15s}
+.mover-item:hover,.big-mover-item:hover{background:rgba(255,255,255,.02)}
+.mover-item:last-child,.big-mover-item:last-child{border-bottom:none}
+.mover-direction{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.mover-direction.entered{background:rgba(61,255,160,.1)}
+.mover-direction.exited{background:rgba(255,92,92,.1)}
+.mover-info{flex:1;min-width:0}
+.mover-keyword{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mover-domain{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;font-family:'JetBrains Mono',monospace}
+.mover-ranks{text-align:right;flex-shrink:0;font-family:'JetBrains Mono',monospace;font-size:12px}
+.rank-from{color:var(--muted);text-decoration:line-through}
+.rank-to{font-size:15px;font-weight:700;margin-top:2px}
+.rank-to.up{color:var(--up)}
+.rank-to.down{color:var(--down)}
+.big-mover-badge{min-width:48px;padding:4px 8px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;text-align:center;flex-shrink:0}
+.big-mover-badge.up{background:rgba(61,255,160,.12);color:var(--up)}
+.big-mover-badge.down{background:rgba(255,92,92,.12);color:var(--down)}
+.big-movers-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:700px){.big-movers-grid{grid-template-columns:1fr}}
+.fire-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:100px;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;flex-shrink:0}
+.fire-badge.hot{background:rgba(61,255,160,.12);color:var(--up)}
+.fire-badge.danger{background:rgba(255,92,92,.12);color:var(--down)}
+
+/* KEYWORDS TABLE */
+.table-section{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:32px}
+.table-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+table{width:100%;border-collapse:collapse}
+th{padding:12px 24px;text-align:left;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--surface2);border-bottom:1px solid var(--border);cursor:pointer;user-select:none;white-space:nowrap}
+th:hover{color:var(--text)}
+td{padding:13px 24px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+.kw-cell{font-weight:600;max-width:240px}
+.domain-cell{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)}
+.rank-cell{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600}
+.change-cell{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;display:flex;align-items:center;gap:5px}
+.change-cell.pos{color:var(--up)}
+.change-cell.neg{color:var(--down)}
+.change-cell.zero{color:var(--muted)}
+.threshold-tags{display:flex;gap:5px;flex-wrap:wrap}
+.threshold-tag{padding:3px 8px;border-radius:100px;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.tag-top3{background:rgba(255,200,74,.15);color:var(--top3)}
+.tag-top10{background:rgba(124,106,255,.15);color:var(--top10)}
+.tag-top20{background:rgba(61,159,255,.15);color:var(--top20)}
+.vol-cell{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted)}
+
+/* PAGINATION */
+.pagination{padding:16px 24px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--muted)}
+.page-btns{display:flex;gap:8px}
+.page-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 14px;border-radius:6px;font-family:'Syne',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+.page-btn:hover{border-color:var(--accent);color:var(--accent)}
+.page-btn:disabled{opacity:.3;cursor:not-allowed}
+.page-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* SITES VIEW */
+.sites-controls{display:flex;gap:12px;align-items:center;margin-bottom:20px;flex-wrap:wrap}
+.sites-search{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 14px;font-family:'Syne',sans-serif;font-size:13px;color:var(--text);outline:none;width:260px;transition:border-color .2s}
+.sites-search:focus{border-color:var(--accent)}
+.sites-search::placeholder{color:var(--muted)}
+.sites-filter-pill{padding:8px 16px;border-radius:100px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--muted);transition:all .15s;white-space:nowrap}
+.sites-filter-pill:hover{color:var(--text)}
+.sites-filter-pill.active{color:var(--text);border-color:var(--text)}
+.sites-filter-pill.active-top3{background:rgba(255,200,74,.1);color:var(--top3);border-color:var(--top3)}
+.sites-filter-pill.active-top10{background:rgba(124,106,255,.1);color:var(--top10);border-color:var(--top10)}
+.sites-filter-pill.active-top20{background:rgba(61,159,255,.1);color:var(--top20);border-color:var(--top20)}
+.sites-table-section{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:32px}
+.site-row{display:grid;grid-template-columns:1fr 80px 80px 80px 80px 100px;align-items:center;padding:13px 24px;border-bottom:1px solid rgba(255,255,255,.04);transition:background .15s;gap:12px}
+.site-row:hover{background:rgba(255,255,255,.02)}
+.site-row:last-child{border-bottom:none}
+.site-row-header{display:grid;grid-template-columns:1fr 80px 80px 80px 80px 100px;align-items:center;padding:11px 24px;gap:12px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);cursor:pointer;user-select:none}
+.site-row-header span:hover{color:var(--text)}
+.site-name a{color:var(--text);text-decoration:none;font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace}
+.site-name a:hover{color:var(--accent)}
+.site-kw-count{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;text-align:center}
+.site-top3-count{color:var(--top3)}
+.site-top10-count{color:var(--top10)}
+.site-top20-count{color:var(--top20)}
+.site-total-count{color:var(--muted)}
+.site-badges{display:flex;gap:4px;flex-wrap:wrap}
+.site-badge{padding:2px 7px;border-radius:100px;font-size:10px;font-weight:700;letter-spacing:.04em}
+.site-badge-top3{background:rgba(255,200,74,.15);color:var(--top3)}
+.site-badge-top10{background:rgba(124,106,255,.15);color:var(--top10)}
+.site-badge-top20{background:rgba(61,159,255,.15);color:var(--top20)}
+.no-top-rankings{color:var(--muted);font-size:11px}
+
+/* OPPORTUNITIES */
+.opp-header{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 24px;margin-bottom:24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.ahrefs-key-input{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);outline:none;width:280px;transition:border-color .2s}
+.ahrefs-key-input:focus{border-color:var(--accent)}
+.ahrefs-key-input::placeholder{color:var(--muted)}
+.fetch-ahrefs-btn{background:linear-gradient(135deg,#ff6b35,#f7931e);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.fetch-ahrefs-btn:hover{transform:translateY(-1px);opacity:.9}
+.fetch-ahrefs-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.ahrefs-status{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.ahrefs-status.ok{color:var(--up)}
+.ahrefs-status.err{color:var(--down)}
+.opp-table-section{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:32px}
+.opp-row{display:grid;grid-template-columns:1fr 120px 70px 80px 80px 100px 120px;align-items:center;padding:13px 24px;border-bottom:1px solid rgba(255,255,255,.04);transition:background .15s;gap:12px}
+.opp-row:hover{background:rgba(255,255,255,.02)}
+.opp-row:last-child{border-bottom:none}
+.opp-row-header{display:grid;grid-template-columns:1fr 120px 70px 80px 80px 100px 120px;align-items:center;padding:11px 24px;gap:12px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);cursor:pointer;user-select:none}
+.opp-row-header span:hover{color:var(--text)}
+.opp-label{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:100px;font-size:11px;font-weight:700;white-space:nowrap}
+.opp-protect{background:rgba(255,200,74,.15);color:var(--top3)}
+.opp-push{background:rgba(124,106,255,.15);color:var(--accent)}
+.opp-quickwin{background:rgba(61,255,160,.15);color:var(--up)}
+.opp-build{background:rgba(61,159,255,.15);color:var(--top20)}
+.opp-score{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--accent);text-align:center}
+.kd-bar{display:flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:12px}
+.kd-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.kd-easy{background:var(--up)}
+.kd-medium{background:var(--gold)}
+.kd-hard{background:var(--down)}
+.opp-filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:20px}
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">
-    <div class="logo-dot"></div>
-    The Money Maker
-  </div>
+  <div class="logo"><div class="logo-dot"></div>The Money Maker</div>
   <div class="header-right">
     <span class="last-updated" id="last-updated">—</span>
     <button class="refresh-btn" id="refresh-btn" onclick="loadData(true)" style="display:none">
@@ -990,13 +262,10 @@
     <div class="setup-title">Connect AccuRanker</div>
     <div class="setup-sub">Paste your AccuRanker API key to load your domains and keyword rankings.</div>
     <div class="field-label">API Key</div>
-    <input type="password" class="api-input" id="api-key-input" placeholder="e.g. abc123def456..." autocomplete="off" />
-    <button class="connect-btn" id="connect-btn" onclick="connect()">Connect & Load Dashboard</button>
+    <input type="password" class="api-input" id="api-key-input" placeholder="e.g. abc123def456..." autocomplete="off">
+    <button class="connect-btn" onclick="connect()">Connect &amp; Load Dashboard</button>
     <div class="error-msg" id="error-msg"></div>
-    <div class="setup-hint">
-      Find your key in AccuRanker → <strong>Profile → API</strong>.<br>
-      Your key is stored only in your browser — never sent anywhere except AccuRanker's API.
-    </div>
+    <div class="setup-hint">Find your key in AccuRanker → <strong>Profile → API</strong>.<br>Your key is stored only in your browser.</div>
   </div>
 </div>
 
@@ -1008,6 +277,7 @@
 
 <!-- DASHBOARD -->
 <div id="dashboard">
+
   <!-- Settings bar -->
   <div class="settings-bar">
     <span class="settings-label">API Key</span>
@@ -1020,202 +290,127 @@
     </select>
   </div>
 
-  <!-- Tab navigation -->
+  <!-- Tabs -->
   <div class="tab-nav">
     <button class="tab-btn active" id="tab-btn-keywords" onclick="switchTab('keywords')">📊 Keywords View</button>
     <button class="tab-btn" id="tab-btn-sites" onclick="switchTab('sites')">🌐 Sites View</button>
     <button class="tab-btn" id="tab-btn-opportunities" onclick="switchTab('opportunities')">💰 Opportunities</button>
   </div>
 
-  <!-- KEYWORDS TAB -->
+  <!-- ── KEYWORDS TAB ── -->
   <div class="tab-content active" id="tab-keywords">
 
-  <!-- Stats -->
-  <div class="stats-row" id="stats-row">
-    <div class="stat-card gold">
-      <div class="stat-label">Entered Top 3</div>
-      <div class="stat-value" id="stat-entered-3">—</div>
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card gold"><div class="stat-label">Entered Top 3</div><div class="stat-value" id="stat-entered-3">—</div></div>
+      <div class="stat-card purple"><div class="stat-label">Entered Top 10</div><div class="stat-value" id="stat-entered-10">—</div></div>
+      <div class="stat-card blue"><div class="stat-label">Entered Top 20</div><div class="stat-value" id="stat-entered-20">—</div></div>
+      <div class="stat-card down"><div class="stat-label">Exited Top 3</div><div class="stat-value" id="stat-exited-3">—</div></div>
+      <div class="stat-card down"><div class="stat-label">Exited Top 10</div><div class="stat-value" id="stat-exited-10">—</div></div>
+      <div class="stat-card down"><div class="stat-label">Exited Top 20</div><div class="stat-value" id="stat-exited-20">—</div></div>
+      <div class="stat-card up"><div class="stat-label">Total Keywords</div><div class="stat-value" id="stat-total">—</div></div>
     </div>
-    <div class="stat-card purple">
-      <div class="stat-label">Entered Top 10</div>
-      <div class="stat-value" id="stat-entered-10">—</div>
-    </div>
-    <div class="stat-card blue">
-      <div class="stat-label">Entered Top 20</div>
-      <div class="stat-value" id="stat-entered-20">—</div>
-    </div>
-    <div class="stat-card down">
-      <div class="stat-label">Exited Top 3</div>
-      <div class="stat-value" id="stat-exited-3">—</div>
-    </div>
-    <div class="stat-card down">
-      <div class="stat-label">Exited Top 10</div>
-      <div class="stat-value" id="stat-exited-10">—</div>
-    </div>
-    <div class="stat-card down">
-      <div class="stat-label">Exited Top 20</div>
-      <div class="stat-value" id="stat-exited-20">—</div>
-    </div>
-    <div class="stat-card up">
-      <div class="stat-label">Total Keywords</div>
-      <div class="stat-value" id="stat-total">—</div>
-    </div>
-  </div>
 
-  <!-- Wins vs Losses bar -->
-  <div class="wins-bar" id="wins-bar">
-    <span class="wins-bar-label">Today's Performance</span>
-    <div class="wins-bar-track">
-      <div class="wins-bar-fill" id="wins-bar-fill" style="width:50%"></div>
+    <!-- Wins bar -->
+    <div class="wins-bar">
+      <span class="wins-bar-label">Today's Performance</span>
+      <div class="wins-bar-track"><div class="wins-bar-fill" id="wins-bar-fill" style="width:50%"></div></div>
+      <div class="wins-bar-stats">
+        <div class="wins-stat"><span class="val up" id="wins-improved">—</span><span class="lbl">improved</span></div>
+        <div class="wins-stat"><span class="val down" id="wins-declined">—</span><span class="lbl">declined</span></div>
+        <div class="wins-stat"><span class="val" id="wins-unchanged" style="color:var(--muted)">—</span><span class="lbl">unchanged</span></div>
+        <div class="wins-stat"><span class="val" id="wins-score" style="color:var(--accent)">—</span><span class="lbl">net positions</span></div>
+      </div>
     </div>
-    <div class="wins-bar-stats">
-      <div class="wins-stat"><span class="val up" id="wins-improved">—</span><span class="lbl">improved</span></div>
-      <div class="wins-stat"><span class="val down" id="wins-declined">—</span><span class="lbl">declined</span></div>
-      <div class="wins-stat"><span class="val" id="wins-unchanged" style="color:var(--muted)">—</span><span class="lbl">unchanged</span></div>
-      <div class="wins-stat"><span class="val" id="wins-score" style="color:var(--accent)">—</span><span class="lbl">net positions</span></div>
-    </div>
-  </div>
 
-  <!-- Big movers -->
-  <div class="big-movers-section">
+    <!-- Big movers -->
+    <div class="big-movers-section">
+      <div class="section-header">
+        <div class="section-title">⚡ Big Movers <span style="font-size:13px;color:var(--muted);font-weight:400">(5+ positions)</span><span class="badge" id="big-movers-badge">—</span></div>
+      </div>
+      <div class="big-movers-grid">
+        <div class="big-movers-panel winners">
+          <div class="big-movers-panel-header"><div class="movers-panel-title" style="color:var(--up)">🚀 Big Jumps</div><span class="panel-count" id="big-jumps-count">—</span></div>
+          <div class="movers-list" id="big-jumps-list"></div>
+        </div>
+        <div class="big-movers-panel losers">
+          <div class="big-movers-panel-header"><div class="movers-panel-title" style="color:var(--down)">⚠️ Big Drops</div><span class="panel-count" id="big-drops-count">—</span></div>
+          <div class="movers-list" id="big-drops-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Threshold movements -->
     <div class="section-header">
-      <div class="section-title">
-        ⚡ Big Movers <span style="font-size:13px;color:var(--muted);font-weight:400">(5+ positions)</span>
-        <span class="badge" id="big-movers-badge">—</span>
+      <div class="section-title">🏆 Rank Threshold Movements<span class="badge" id="movements-badge">—</span></div>
+      <div class="pill-group">
+        <div class="pill active-all" id="pill-all" onclick="setMovementFilter('all')">All</div>
+        <div class="pill" id="pill-entered" onclick="setMovementFilter('entered')">↑ Entered</div>
+        <div class="pill" id="pill-exited" onclick="setMovementFilter('exited')">↓ Exited</div>
       </div>
     </div>
-    <div class="big-movers-grid">
-      <div class="big-movers-panel winners">
-        <div class="big-movers-panel-header">
-          <div class="movers-panel-title" style="color:var(--up)">🚀 Big Jumps</div>
-          <span class="panel-count" id="big-jumps-count">—</span>
-        </div>
-        <div class="movers-list" id="big-jumps-list"></div>
+    <div class="movers-grid">
+      <div class="movers-panel">
+        <div class="movers-panel-header"><div class="movers-panel-title"><div class="threshold-dot" style="background:var(--top3);box-shadow:0 0 8px var(--top3)"></div>Top 3</div><span class="panel-count" id="panel-count-3">—</span></div>
+        <div class="movers-list" id="movers-3"></div>
       </div>
-      <div class="big-movers-panel losers">
-        <div class="big-movers-panel-header">
-          <div class="movers-panel-title" style="color:var(--down)">⚠️ Big Drops</div>
-          <span class="panel-count" id="big-drops-count">—</span>
-        </div>
-        <div class="movers-list" id="big-drops-list"></div>
+      <div class="movers-panel">
+        <div class="movers-panel-header"><div class="movers-panel-title"><div class="threshold-dot" style="background:var(--top10);box-shadow:0 0 8px var(--top10)"></div>Top 10</div><span class="panel-count" id="panel-count-10">—</span></div>
+        <div class="movers-list" id="movers-10"></div>
+      </div>
+      <div class="movers-panel">
+        <div class="movers-panel-header"><div class="movers-panel-title"><div class="threshold-dot" style="background:var(--top20);box-shadow:0 0 8px var(--top20)"></div>Top 20</div><span class="panel-count" id="panel-count-20">—</span></div>
+        <div class="movers-list" id="movers-20"></div>
       </div>
     </div>
-  </div>
 
-  <!-- Movement panels -->
-  <div class="section-header">
-    <div class="section-title">
-      🏆 Rank Threshold Movements
-      <span class="badge" id="movements-badge">—</span>
-    </div>
-    <div class="pill-group">
-      <div class="pill active-all" id="pill-all" onclick="setMovementFilter('all')">All</div>
-      <div class="pill" id="pill-entered" onclick="setMovementFilter('entered')">↑ Entered</div>
-      <div class="pill" id="pill-exited" onclick="setMovementFilter('exited')">↓ Exited</div>
-    </div>
-  </div>
-
-  <div class="movers-grid">
-    <div class="movers-panel">
-      <div class="movers-panel-header">
-        <div class="movers-panel-title">
-          <div class="threshold-dot" style="background:var(--top3);box-shadow:0 0 8px var(--top3)"></div>
-          Top 3
+    <!-- All keywords table -->
+    <div class="table-section">
+      <div class="table-header">
+        <div class="section-title" style="font-size:16px">All Keywords<span class="badge" id="table-badge">—</span></div>
+        <div class="filters">
+          <input type="text" class="search-input" id="kw-search" placeholder="Search keywords..." oninput="applyFilters()">
+          <select class="filter-select" id="movement-filter" onchange="applyFilters()">
+            <option value="all">All movements</option>
+            <option value="up">Improved</option>
+            <option value="down">Declined</option>
+            <option value="top3">In Top 3</option>
+            <option value="top10">In Top 10</option>
+            <option value="top20">In Top 20</option>
+            <option value="bigjump">Big jumps (5+)</option>
+            <option value="bigdrop">Big drops (5+)</option>
+          </select>
         </div>
-        <span class="panel-count" id="panel-count-3">—</span>
       </div>
-      <div class="movers-list" id="movers-3"></div>
-    </div>
-    <div class="movers-panel">
-      <div class="movers-panel-header">
-        <div class="movers-panel-title">
-          <div class="threshold-dot" style="background:var(--top10);box-shadow:0 0 8px var(--top10)"></div>
-          Top 10
-        </div>
-        <span class="panel-count" id="panel-count-10">—</span>
-      </div>
-      <div class="movers-list" id="movers-10"></div>
-    </div>
-    <div class="movers-panel">
-      <div class="movers-panel-header">
-        <div class="movers-panel-title">
-          <div class="threshold-dot" style="background:var(--top20);box-shadow:0 0 8px var(--top20)"></div>
-          Top 20
-        </div>
-        <span class="panel-count" id="panel-count-20">—</span>
-      </div>
-      <div class="movers-list" id="movers-20"></div>
-    </div>
-  </div>
-
-  <!-- All keywords table -->
-  <div class="table-section">
-    <div class="table-header">
-      <div class="section-title" style="font-size:16px">
-        All Keywords
-        <span class="badge" id="table-badge">—</span>
-      </div>
-      <div class="filters">
-        <input type="text" class="search-input" id="kw-search" placeholder="Search keywords..." oninput="applyFilters()">
-        <select class="filter-select" id="movement-filter" onchange="applyFilters()">
-          <option value="all">All movements</option>
-          <option value="up">Improved</option>
-          <option value="down">Declined</option>
-          <option value="top3">In Top 3</option>
-          <option value="top10">In Top 10</option>
-          <option value="top20">In Top 20</option>
-          <option value="bigjump">Big jumps (5+)</option>
-          <option value="bigdrop">Big drops (5+)</option>
-        </select>
-      </div>
-    </div>
-    <div style="overflow-x:auto">
-      <table>
-        <thead>
-          <tr>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr>
             <th onclick="sortTable('keyword')">Keyword ↕</th>
             <th onclick="sortTable('domain')">Domain ↕</th>
             <th onclick="sortTable('rank')">Rank ↕</th>
             <th onclick="sortTable('change')">Change ↕</th>
             <th>Thresholds</th>
-            <th onclick="sortTable('volume')">Volume ↕</th>
-          </tr>
-        </thead>
-        <tbody id="kw-table-body"></tbody>
-      </table>
+            <th onclick="sortTable('volume')">AI Volume ↕</th>
+          </tr></thead>
+          <tbody id="kw-table-body"></tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <span id="pagination-info">—</span>
+        <div class="page-btns" id="page-btns"></div>
+      </div>
     </div>
-    <div class="pagination">
-      <span id="pagination-info">—</span>
-      <div class="page-btns" id="page-btns"></div>
-    </div>
-  </div>
 
   </div><!-- end tab-keywords -->
 
-  <!-- SITES TAB -->
+  <!-- ── SITES TAB ── -->
   <div class="tab-content" id="tab-sites">
-
-    <!-- Sites summary stats -->
     <div class="stats-row" style="margin-bottom:24px">
-      <div class="stat-card gold">
-        <div class="stat-label">Sites w/ Top 3</div>
-        <div class="stat-value" id="site-stat-top3">—</div>
-      </div>
-      <div class="stat-card purple">
-        <div class="stat-label">Sites w/ Top 10</div>
-        <div class="stat-value" id="site-stat-top10">—</div>
-      </div>
-      <div class="stat-card blue">
-        <div class="stat-label">Sites w/ Top 20</div>
-        <div class="stat-value" id="site-stat-top20">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Total Sites</div>
-        <div class="stat-value" id="site-stat-total" style="color:var(--text)">—</div>
-      </div>
+      <div class="stat-card gold"><div class="stat-label">Sites w/ Top 3</div><div class="stat-value" id="site-stat-top3">—</div></div>
+      <div class="stat-card purple"><div class="stat-label">Sites w/ Top 10</div><div class="stat-value" id="site-stat-top10">—</div></div>
+      <div class="stat-card blue"><div class="stat-label">Sites w/ Top 20</div><div class="stat-value" id="site-stat-top20">—</div></div>
+      <div class="stat-card"><div class="stat-label">Total Sites</div><div class="stat-value" id="site-stat-total" style="color:var(--text)">—</div></div>
     </div>
-
-    <!-- Controls -->
     <div class="sites-controls">
       <input type="text" class="sites-search" id="sites-search" placeholder="Search domains..." oninput="renderSitesTable()">
       <div style="display:flex;gap:6px;flex-wrap:wrap">
@@ -1226,8 +421,6 @@
         <div class="sites-filter-pill" id="spill-none" onclick="setSitesFilter('none')">No Top Rankings</div>
       </div>
     </div>
-
-    <!-- Sites table -->
     <div class="sites-table-section">
       <div class="site-row-header">
         <span onclick="sortSites('domain')">Domain ↕</span>
@@ -1243,49 +436,26 @@
         <div class="page-btns" id="sites-page-btns"></div>
       </div>
     </div>
-
   </div><!-- end tab-sites -->
 
-  <!-- OPPORTUNITIES TAB -->
+  <!-- ── OPPORTUNITIES TAB ── -->
   <div class="tab-content" id="tab-opportunities">
-
-    <!-- Ahrefs connection header -->
     <div class="opp-header">
       <span class="settings-label">Ahrefs API Key</span>
       <input type="password" class="ahrefs-key-input" id="ahrefs-key-input" placeholder="Ahrefs API token..." autocomplete="off">
-      <button class="fetch-ahrefs-btn" id="fetch-ahrefs-btn" onclick="fetchAhrefsData()">
-        🔍 Fetch Opportunity Data
-      </button>
+      <button class="fetch-ahrefs-btn" id="fetch-ahrefs-btn" onclick="fetchAhrefsData()">🔍 Fetch Opportunity Data</button>
       <span class="ahrefs-status" id="ahrefs-status">Enter your Ahrefs API key and click Fetch</span>
       <div class="spacer"></div>
-      <span style="font-size:11px;color:var(--muted)">Only fetches keywords ranking 1–50 · Results cached</span>
+      <span style="font-size:11px;color:var(--muted)">Keywords ranking 1–50 · Volume from AccuRanker AI · KD from Ahrefs · Results cached</span>
     </div>
-
-    <!-- Opportunity stats -->
-    <div class="opp-stats">
-      <div class="stat-card gold">
-        <div class="stat-label">🏆 Protect</div>
-        <div class="stat-value" id="opp-stat-protect">—</div>
-      </div>
-      <div class="stat-card purple">
-        <div class="stat-label">⚡ Push</div>
-        <div class="stat-value" id="opp-stat-push">—</div>
-      </div>
-      <div class="stat-card up">
-        <div class="stat-label">🔥 Quick Wins</div>
-        <div class="stat-value" id="opp-stat-quickwin">—</div>
-      </div>
-      <div class="stat-card blue">
-        <div class="stat-label">📈 Build</div>
-        <div class="stat-value" id="opp-stat-build">—</div>
-      </div>
+    <div class="stats-row">
+      <div class="stat-card gold"><div class="stat-label">🏆 Protect</div><div class="stat-value" id="opp-stat-protect">—</div></div>
+      <div class="stat-card purple"><div class="stat-label">⚡ Push</div><div class="stat-value" id="opp-stat-push">—</div></div>
+      <div class="stat-card up"><div class="stat-label">🔥 Quick Wins</div><div class="stat-value" id="opp-stat-quickwin">—</div></div>
+      <div class="stat-card blue"><div class="stat-label">📈 Build</div><div class="stat-value" id="opp-stat-build">—</div></div>
     </div>
-
-    <!-- Filters -->
     <div class="opp-filters">
-      <select class="filter-select" id="opp-domain-filter" onchange="renderOppTable()">
-        <option value="all">All Domains</option>
-      </select>
+      <select class="filter-select" id="opp-domain-filter" onchange="renderOppTable()"><option value="all">All Domains</option></select>
       <div class="pill-group">
         <div class="pill active-all" id="opill-all" onclick="setOppFilter('all')">All</div>
         <div class="pill" id="opill-protect" onclick="setOppFilter('protect')">🏆 Protect</div>
@@ -1295,30 +465,24 @@
       </div>
       <input type="text" class="search-input" id="opp-search" placeholder="Search keywords..." oninput="renderOppTable()" style="margin-left:auto">
     </div>
-
-    <!-- Opportunities table -->
     <div class="opp-table-section">
       <div class="opp-row-header">
         <span onclick="sortOpp('keyword')">Keyword ↕</span>
         <span onclick="sortOpp('domain')">Domain ↕</span>
         <span onclick="sortOpp('rank')" style="text-align:center">Rank ↕</span>
-        <span onclick="sortOpp('volume')" style="text-align:center">Volume ↕</span>
+        <span onclick="sortOpp('volume')" style="text-align:center">AI Volume ↕</span>
         <span onclick="sortOpp('kd')" style="text-align:center">KD ↕</span>
         <span onclick="sortOpp('score')" style="text-align:center">Score ↕</span>
         <span>Opportunity</span>
       </div>
       <div id="opp-table-body">
-        <div class="empty-panel" style="padding:60px">
-          <div class="empty-icon">🔍</div>
-          Enter your Ahrefs API key above and click "Fetch Opportunity Data" to get started
-        </div>
+        <div class="empty-panel" style="padding:60px"><div class="empty-icon">🔍</div>Enter your Ahrefs API key above and click "Fetch Opportunity Data" to get started</div>
       </div>
       <div class="pagination">
         <span id="opp-pagination-info">—</span>
         <div class="page-btns" id="opp-page-btns"></div>
       </div>
     </div>
-
   </div><!-- end tab-opportunities -->
 
 </div><!-- end dashboard -->
@@ -1326,918 +490,454 @@
 <script>
 // ─── STATE ───────────────────────────────────────────────────
 let apiKey = localStorage.getItem('ar_api_key') || '';
-let allKeywords = [];
-let filteredKeywords = [];
-let movementFilter = 'all';
-let sortField = 'change';
-let sortDir = -1;
-let currentPage = 1;
+let allKeywords = [], filteredKeywords = [];
+let movementFilter = 'all', sortField = 'change', sortDir = -1, currentPage = 1;
 const PAGE_SIZE = 50;
 
-// Sites state
-let sitesData = [];
-let filteredSites = [];
-let sitesFilter = 'all';
-let sitesSortField = 'top3';
-let sitesSortDir = -1;
-let sitesPage = 1;
+let sitesData = [], filteredSites = [];
+let sitesFilter = 'all', sitesSortField = 'top3', sitesSortDir = -1, sitesPage = 1;
 const SITES_PAGE_SIZE = 50;
 
-// ─── INIT ─────────────────────────────────────────────────────
-window.addEventListener('DOMContentLoaded', () => {
-  if (apiKey) {
-    showLoading();
-    loadData();
-  }
-});
+let oppData = [], filteredOpp = [];
+let oppFilter = 'all', oppSortField = 'score', oppSortDir = -1, oppPage = 1;
+const OPP_PAGE_SIZE = 50;
 
-// ─── AUTH ─────────────────────────────────────────────────────
-function connect() {
-  const val = document.getElementById('api-key-input').value.trim();
-  if (!val) { showError('Please enter your API key.'); return; }
-  apiKey = val;
-  localStorage.setItem('ar_api_key', apiKey);
-  showLoading();
-  loadData();
-}
+// ─── UTILITIES ───────────────────────────────────────────────
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const chunk = (arr, n) => { const o=[]; for(let i=0;i<arr.length;i+=n) o.push(arr.slice(i,i+n)); return o; };
+const esc = s => s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : '';
+const fmt = d => d.toISOString().split('T')[0];
 
-function resetKey() {
-  localStorage.removeItem('ar_api_key');
-  apiKey = '';
-  allKeywords = [];
-  document.getElementById('dashboard').style.display = 'none';
-  document.getElementById('refresh-btn').style.display = 'none';
-  document.getElementById('setup-screen').style.display = 'flex';
-  document.getElementById('api-key-input').value = '';
-  document.getElementById('error-msg').style.display = 'none';
-}
-
-// ─── FETCH ────────────────────────────────────────────────────
-async function arFetch(path) {
-  const encodedPath = encodeURIComponent(path);
-  const res = await fetch(`/api/proxy?path=${encodedPath}`, {
-    headers: { 'Authorization': `Token ${apiKey}`, 'Accept': 'application/json' }
-  });
-  if (!res.ok) throw new Error(`API error ${res.status}: ${res.statusText}`);
-  return res.json();
+function paginate(items, page, size, infoId, btnsId, cb) {
+  const total = items.length, pages = Math.ceil(total/size), start = (page-1)*size;
+  document.getElementById(infoId).textContent = `Showing ${Math.min(start+1,total)}–${Math.min(start+size,total)} of ${total}`;
+  const el = document.getElementById(btnsId); el.innerHTML = '';
+  if(pages<=1) return items.slice(start,start+size);
+  const add = (lbl,p,active,dis) => { const b=document.createElement('button'); b.className='page-btn'+(active?' active':''); b.textContent=lbl; b.disabled=dis; b.onclick=()=>cb(p); el.appendChild(b); };
+  add('←',page-1,false,page===1);
+  const sp=Math.max(1,page-2),ep=Math.min(pages,sp+4);
+  for(let i=sp;i<=ep;i++) add(i,i,i===page,false);
+  add('→',page+1,false,page===pages);
+  return items.slice(start,start+size);
 }
 
 // ─── INDEXEDDB CACHE ─────────────────────────────────────────
-const DB_NAME = 'moneymaker';
-const DB_VERSION = 1;
-let db = null;
-
+let _db = null;
 async function openDB() {
-  if (db) return db;
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = e => {
-      const d = e.target.result;
-      if (!d.objectStoreNames.contains('cache')) d.createObjectStore('cache');
-    };
-    req.onsuccess = e => { db = e.target.result; resolve(db); };
-    req.onerror = () => reject(req.error);
+  if(_db) return _db;
+  return new Promise((res,rej) => {
+    const r = indexedDB.open('moneymaker',1);
+    r.onupgradeneeded = e => { if(!e.target.result.objectStoreNames.contains('cache')) e.target.result.createObjectStore('cache'); };
+    r.onsuccess = e => { _db=e.target.result; res(_db); };
+    r.onerror = () => rej(r.error);
   });
 }
-
-async function saveCache(domains, keywords) {
-  try {
-    const d = await openDB();
-    const tx = d.transaction('cache', 'readwrite');
-    const store = tx.objectStore('cache');
-    store.put({ ts: Date.now(), domains, keywords }, 'main');
-  } catch(e) { console.warn('Cache save failed:', e.message); }
+async function dbGet(key) {
+  try { const d=await openDB(); return new Promise(res=>{ const r=d.transaction('cache','readonly').objectStore('cache').get(key); r.onsuccess=()=>res(r.result||null); r.onerror=()=>res(null); }); } catch{ return null; }
+}
+async function dbSet(key,val) {
+  try { const d=await openDB(); const tx=d.transaction('cache','readwrite'); tx.objectStore('cache').put(val,key); } catch(e){ console.warn('cache write failed',e); }
+}
+async function dbDel(key) {
+  try { const d=await openDB(); d.transaction('cache','readwrite').objectStore('cache').delete(key); } catch{}
 }
 
-async function loadCache() {
-  try {
-    const d = await openDB();
-    return new Promise((resolve) => {
-      const tx = d.transaction('cache', 'readonly');
-      const req = tx.objectStore('cache').get('main');
-      req.onsuccess = () => {
-        const val = req.result;
-        if (!val) return resolve(null);
-        const TTL = 24 * 60 * 60 * 1000;
-        if (Date.now() - val.ts > TTL) return resolve(null);
-        resolve(val);
-      };
-      req.onerror = () => resolve(null);
-    });
-  } catch { return null; }
+// ─── API ─────────────────────────────────────────────────────
+async function arFetch(path) {
+  const res = await fetch(`/api/proxy?path=${encodeURIComponent(path)}`, { headers:{'Authorization':`Token ${apiKey}`,'Accept':'application/json'} });
+  if(!res.ok) throw new Error(`API ${res.status}: ${res.statusText}`);
+  return res.json();
 }
 
-async function clearCache() {
-  try {
-    const d = await openDB();
-    const tx = d.transaction('cache', 'readwrite');
-    tx.objectStore('cache').delete('main');
-  } catch(e) {}
+// ─── AUTH ─────────────────────────────────────────────────────
+function connect() {
+  const v = document.getElementById('api-key-input').value.trim();
+  if(!v){ showError('Please enter your API key.'); return; }
+  apiKey = v; localStorage.setItem('ar_api_key',apiKey);
+  showLoading(); loadData();
+}
+function resetKey() {
+  localStorage.removeItem('ar_api_key'); apiKey=''; allKeywords=[];
+  dbDel('main');
+  document.getElementById('dashboard').style.display='none';
+  document.getElementById('refresh-btn').style.display='none';
+  document.getElementById('setup-screen').style.display='flex';
+  document.getElementById('api-key-input').value='';
+  document.getElementById('error-msg').style.display='none';
 }
 
-function getCacheAge(ts) {
-  const mins = Math.floor((Date.now() - ts) / 60000);
-  if (mins < 60) return `${mins}m ago`;
-  return `${Math.floor(mins / 60)}h ago`;
-}
+// ─── LOAD DATA ───────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => { if(apiKey){ showLoading(); loadData(); } });
 
-async function loadData(forceRefresh = false) {
+async function loadData(forceRefresh=false) {
   const btn = document.getElementById('refresh-btn');
-  btn.classList.add('spinning');
-  btn.disabled = true;
+  btn.classList.add('spinning'); btn.disabled=true;
 
-  // Try cache first
-  if (!forceRefresh) {
-    const cached = await loadCache();
-    if (cached) {
-      setLoadingText('Loading from cache...');
+  if(!forceRefresh) {
+    const cached = await dbGet('main');
+    if(cached && (Date.now()-cached.ts < 24*3600000)) {
       allKeywords = cached.keywords;
       populateDomainFilter(cached.domains);
-      processAndRender();
-      buildSitesData();
-      showDashboard();
+      processAndRender(); buildSitesData(); showDashboard();
       document.getElementById('last-updated').textContent = `Cached ${getCacheAge(cached.ts)} — click Refresh to update`;
-      btn.classList.remove('spinning');
-      btn.disabled = false;
+      btn.classList.remove('spinning'); btn.disabled=false;
       return;
     }
-  } else {
-    await clearCache();
-  }
+  } else { await dbDel('main'); }
 
   setLoadingText('Fetching domains...');
-
   try {
-    // Get ALL domains across all pages
-    let domains = [];
-    let nextUrl = '/api/v4/domains/?fields=id,domain,display_name&page_size=100';
-    while (nextUrl) {
+    // Paginate through all domains
+    let domains=[], nextUrl='/api/v4/domains/?fields=id,domain,display_name&page_size=100';
+    while(nextUrl) {
       const data = await arFetch(nextUrl);
-      const results = data.results || data;
-      domains = domains.concat(results);
-      nextUrl = data.next ? data.next.replace('https://app.accuranker.com', '') : null;
+      domains = domains.concat(data.results||data);
+      nextUrl = data.next ? data.next.replace('https://app.accuranker.com','') : null;
       setLoadingText(`Fetching domains... ${domains.length} found`);
-      if (nextUrl) await sleep(300);
+      if(nextUrl) await sleep(300);
     }
-
-    if (!domains.length) { showError('No domains found.'); return; }
-
+    if(!domains.length){ showError('No domains found.'); return; }
     populateDomainFilter(domains);
 
-    // Build a domain lookup map
-    const domainMap = {};
-    domains.forEach(d => { domainMap[d.id] = d.display_name || d.domain; });
-
     // Fetch keywords per domain with rate limiting
-    allKeywords = [];
-    const chunks = chunkArray(domains, 3);
-    let loaded = 0;
-    for (const chunk of chunks) {
-      const results = await Promise.all(chunk.map(d => fetchKeywordsForDomain(d)));
-      results.forEach(kws => allKeywords.push(...kws));
-      loaded += chunk.length;
-      setLoadingText(`Loading keywords... ${loaded}/${domains.length} domains (${allKeywords.length} keywords found)`);
-      if (loaded < domains.length) await sleep(700);
+    allKeywords=[];
+    const batches = chunk(domains,3);
+    let loaded=0;
+    for(const batch of batches) {
+      const results = await Promise.all(batch.map(d=>fetchKwsForDomain(d)));
+      results.forEach(kws=>allKeywords.push(...kws));
+      loaded+=batch.length;
+      setLoadingText(`Loading keywords... ${loaded}/${domains.length} domains (${allKeywords.length} keywords)`);
+      if(loaded<domains.length) await sleep(700);
     }
 
-    setLoadingText('Processing rank movements...');
-    await saveCache(domains, allKeywords);
-    processAndRender();
-    buildSitesData();
-    showDashboard();
+    await dbSet('main',{ts:Date.now(),domains,keywords:allKeywords});
+    processAndRender(); buildSitesData(); showDashboard();
 
-  } catch (err) {
-    console.error(err);
-    showError(`Failed to connect: ${err.message}. Check your API key and try again.`);
-    showSetup();
-  } finally {
-    btn.classList.remove('spinning');
-    btn.disabled = false;
-  }
+  } catch(err) {
+    console.error(err); showError(`Failed: ${err.message}`); showSetup();
+  } finally { btn.classList.remove('spinning'); btn.disabled=false; }
 }
 
-function populateDomainFilter(domains) {
-  const domSel = document.getElementById('domain-filter');
-  domSel.innerHTML = '<option value="all">All Domains</option>';
-  domains.forEach(d => {
-    const opt = document.createElement('option');
-    opt.value = d.id;
-    opt.textContent = d.display_name || d.domain;
-    domSel.appendChild(opt);
-  });
-}
-
-async function fetchKeywordsForDomain(domain, retries = 3) {
+async function fetchKwsForDomain(domain, retries=3) {
   try {
-    // Get today and yesterday dates
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const fmt = d => d.toISOString().split('T')[0];
-
-    const fields = 'id,keyword,ranks.rank,ranks.created_at,search_volume.search_volume,search_volume.ai_search_volume,tags';
-    const url = `/api/v4/domains/${domain.id}/keywords/?fields=${fields}&period_from=${fmt(yesterday)}&period_to=${fmt(today)}&page_size=500`;
+    const today=new Date(), yesterday=new Date(today);
+    yesterday.setDate(yesterday.getDate()-1);
+    const fields='id,keyword,ranks.rank,ranks.created_at,search_volume.search_volume,search_volume.ai_search_volume,tags';
+    const url=`/api/v4/domains/${domain.id}/keywords/?fields=${fields}&period_from=${fmt(yesterday)}&period_to=${fmt(today)}&page_size=500`;
     const data = await arFetch(url);
-    const kws = data.results || data;
-
-    // Log first keyword from first successful domain load
-    if (allKeywords.length === 0 && kws.length > 0) {
-      console.log('SAMPLE KEYWORD:', JSON.stringify(kws[0], null, 2));
-    }
-
+    const kws = data.results||data;
     return kws.map(kw => {
-      // ranks is an array sorted by date - get today and yesterday
-      const ranks = kw.ranks || [];
-      const todayRank = ranks.length > 0 ? ranks[ranks.length - 1].rank : null;
-      const yesterdayRank = ranks.length > 1 ? ranks[0].rank : null;
-      const volume = kw.search_volume ? (kw.search_volume.ai_search_volume || kw.search_volume.search_volume || 0) : 0;
-
-      return {
-        id: kw.id,
-        keyword: kw.keyword,
-        rank: todayRank,
-        rank_compare: yesterdayRank,
-        search_volume: volume,
-        tags: kw.tags,
-        domainId: domain.id,
-        domainName: domain.display_name || domain.domain
-      };
+      const ranks = kw.ranks||[];
+      const todayRank = ranks.length>0 ? ranks[ranks.length-1].rank : null;
+      const prevRank  = ranks.length>1 ? ranks[0].rank : null;
+      const sv = kw.search_volume||{};
+      const volume = sv.ai_search_volume ?? sv.search_volume ?? 0;
+      return { id:kw.id, keyword:kw.keyword, rank:todayRank, rank_compare:prevRank, search_volume:volume, tags:kw.tags, domainId:domain.id, domainName:domain.display_name||domain.domain };
     });
   } catch(e) {
-    if (retries > 0 && (e.message.includes('429') || e.message.includes('502'))) {
-      await sleep(3000);
-      return fetchKeywordsForDomain(domain, retries - 1);
-    }
+    if(retries>0 && (e.message.includes('429')||e.message.includes('502'))){ await sleep(3000); return fetchKwsForDomain(domain,retries-1); }
     return [];
   }
 }
 
-// ─── PROCESS ──────────────────────────────────────────────────
+function populateDomainFilter(domains) {
+  const sel=document.getElementById('domain-filter');
+  sel.innerHTML='<option value="all">All Domains</option>';
+  domains.forEach(d=>{ const o=document.createElement('option'); o.value=d.id; o.textContent=d.display_name||d.domain; sel.appendChild(o); });
+}
+
+function getCacheAge(ts) {
+  const m=Math.floor((Date.now()-ts)/60000);
+  return m<60?`${m}m ago`:`${Math.floor(m/60)}h ago`;
+}
+
+// ─── PROCESS ─────────────────────────────────────────────────
 function processAndRender() {
-  // Annotate each keyword with threshold movements
   allKeywords.forEach(kw => {
-    const cur = kw.rank;
-    const prev = kw.rank_compare;
-    kw._change = (cur && prev) ? (prev - cur) : 0;
-    kw._inTop3 = cur !== null && cur <= 3;
-    kw._inTop10 = cur !== null && cur <= 10;
-    kw._inTop20 = cur !== null && cur <= 20;
-    kw._enteredTop3 = cur !== null && cur <= 3 && (prev === null || prev > 3);
-    kw._exitedTop3 = (cur === null || cur > 3) && prev !== null && prev <= 3;
-    kw._enteredTop10 = cur !== null && cur <= 10 && (prev === null || prev > 10);
-    kw._exitedTop10 = (cur === null || cur > 10) && prev !== null && prev <= 10;
-    kw._enteredTop20 = cur !== null && cur <= 20 && (prev === null || prev > 20);
-    kw._exitedTop20 = (cur === null || cur > 20) && prev !== null && prev <= 20;
-    kw._hasMovement = kw._enteredTop3 || kw._exitedTop3 || kw._enteredTop10 || kw._exitedTop10 || kw._enteredTop20 || kw._exitedTop20;
-    kw._bigJump = kw._change >= 5;
-    kw._bigDrop = kw._change <= -5;
+    const c=kw.rank, p=kw.rank_compare;
+    kw._change = (c!==null&&p!==null) ? (p-c) : 0;
+    kw._inTop3  = c!==null&&c<=3;
+    kw._inTop10 = c!==null&&c<=10;
+    kw._inTop20 = c!==null&&c<=20;
+    kw._enteredTop3  = c!==null&&c<=3  && (p===null||p>3);
+    kw._exitedTop3   = (c===null||c>3)  && p!==null&&p<=3;
+    kw._enteredTop10 = c!==null&&c<=10 && (p===null||p>10);
+    kw._exitedTop10  = (c===null||c>10) && p!==null&&p<=10;
+    kw._enteredTop20 = c!==null&&c<=20 && (p===null||p>20);
+    kw._exitedTop20  = (c===null||c>20) && p!==null&&p<=20;
+    kw._hasMovement = kw._enteredTop3||kw._exitedTop3||kw._enteredTop10||kw._exitedTop10||kw._enteredTop20||kw._exitedTop20;
+    kw._bigJump = kw._change>=5;
+    kw._bigDrop = kw._change<=-5;
   });
-
-  applyFilters();
-  renderMovers();
-  renderBigMovers();
-  updateStats();
-  updateWinsBar();
-  updateLastUpdated();
+  applyFilters(); renderMovers(); renderBigMovers(); updateStats(); updateWinsBar();
+  document.getElementById('last-updated').textContent='Updated '+new Date().toLocaleTimeString();
 }
 
+// ─── STATS ───────────────────────────────────────────────────
+function getFilteredKws() {
+  const v=document.getElementById('domain-filter').value;
+  return v==='all'?allKeywords:allKeywords.filter(k=>String(k.domainId)===String(v));
+}
 function updateStats() {
-  const domainFilterVal = document.getElementById('domain-filter').value;
-  const kws = domainFilterVal === 'all' ? allKeywords : allKeywords.filter(k => String(k.domainId) === String(domainFilterVal));
-
-  document.getElementById('stat-entered-3').textContent = kws.filter(k => k._enteredTop3).length;
-  document.getElementById('stat-entered-10').textContent = kws.filter(k => k._enteredTop10).length;
-  document.getElementById('stat-entered-20').textContent = kws.filter(k => k._enteredTop20).length;
-  document.getElementById('stat-exited-3').textContent = kws.filter(k => k._exitedTop3).length;
-  document.getElementById('stat-exited-10').textContent = kws.filter(k => k._exitedTop10).length;
-  document.getElementById('stat-exited-20').textContent = kws.filter(k => k._exitedTop20).length;
-  document.getElementById('stat-total').textContent = kws.length;
+  const kws=getFilteredKws();
+  document.getElementById('stat-entered-3').textContent=kws.filter(k=>k._enteredTop3).length;
+  document.getElementById('stat-entered-10').textContent=kws.filter(k=>k._enteredTop10).length;
+  document.getElementById('stat-entered-20').textContent=kws.filter(k=>k._enteredTop20).length;
+  document.getElementById('stat-exited-3').textContent=kws.filter(k=>k._exitedTop3).length;
+  document.getElementById('stat-exited-10').textContent=kws.filter(k=>k._exitedTop10).length;
+  document.getElementById('stat-exited-20').textContent=kws.filter(k=>k._exitedTop20).length;
+  document.getElementById('stat-total').textContent=kws.length;
 }
-
-function renderMovers() {
-  const domainFilterVal = document.getElementById('domain-filter').value;
-  const kws = domainFilterVal === 'all' ? allKeywords : allKeywords.filter(k => String(k.domainId) === String(domainFilterVal));
-
-  renderMoverPanel(3, kws, 'movers-3', 'panel-count-3');
-  renderMoverPanel(10, kws, 'movers-10', 'panel-count-10');
-  renderMoverPanel(20, kws, 'movers-20', 'panel-count-20');
-
-  const total = kws.filter(k => k._hasMovement).length;
-  document.getElementById('movements-badge').textContent = total + ' movements';
-}
-
-function renderMoverPanel(threshold, kws, listId, countId) {
-  const enteredKey = `_enteredTop${threshold}`;
-  const exitedKey = `_exitedTop${threshold}`;
-  let items = kws.filter(k => k[enteredKey] || k[exitedKey]);
-
-  if (movementFilter === 'entered') items = items.filter(k => k[enteredKey]);
-  if (movementFilter === 'exited') items = items.filter(k => k[exitedKey]);
-
-  document.getElementById(countId).textContent = items.length + ' keywords';
-  const list = document.getElementById(listId);
-
-  if (items.length === 0) {
-    list.innerHTML = `<div class="empty-panel"><div class="empty-icon">✓</div>No movements in Top ${threshold}</div>`;
-    return;
-  }
-
-  list.innerHTML = items.map(kw => {
-    const entered = kw[enteredKey];
-    const arrow = entered ? '↑' : '↓';
-    const cls = entered ? 'entered' : 'exited';
-    return `
-      <div class="mover-item">
-        <div class="mover-direction ${cls}">${arrow}</div>
-        <div class="mover-info">
-          <div class="mover-keyword">${escHtml(kw.keyword)}</div>
-          <div class="mover-domain">${escHtml(kw.domainName)}</div>
-        </div>
-        <div class="mover-ranks">
-          <div class="rank-from">#${kw.rank_compare || '?'}</div>
-          <div class="rank-to ${entered ? 'up' : 'down'}">#${kw.rank || '?'}</div>
-        </div>
-      </div>`;
-  }).join('');
-}
-
-function renderBigMovers() {
-  const domainFilterVal = document.getElementById('domain-filter').value;
-  const kws = domainFilterVal === 'all' ? allKeywords : allKeywords.filter(k => String(k.domainId) === String(domainFilterVal));
-
-  const jumps = kws.filter(k => k._bigJump).sort((a,b) => b._change - a._change);
-  const drops = kws.filter(k => k._bigDrop).sort((a,b) => a._change - b._change);
-
-  document.getElementById('big-movers-badge').textContent = (jumps.length + drops.length) + ' keywords';
-  document.getElementById('big-jumps-count').textContent = jumps.length + ' keywords';
-  document.getElementById('big-drops-count').textContent = drops.length + ' keywords';
-
-  const renderList = (items, listId, type) => {
-    const list = document.getElementById(listId);
-    if (items.length === 0) {
-      list.innerHTML = `<div class="empty-panel"><div class="empty-icon">${type === 'up' ? '✓' : '✓'}</div>No big ${type === 'up' ? 'jumps' : 'drops'} today</div>`;
-      return;
-    }
-    list.innerHTML = items.slice(0, 20).map(kw => `
-      <div class="big-mover-item">
-        <div class="big-mover-badge ${type}">${type === 'up' ? '+' : ''}${kw._change}</div>
-        <div class="mover-info">
-          <div class="mover-keyword">${escHtml(kw.keyword)}</div>
-          <div class="mover-domain">${escHtml(kw.domainName)}</div>
-        </div>
-        <div class="mover-ranks">
-          <div class="rank-from">#${kw.rank_compare || '?'}</div>
-          <div class="rank-to ${type}">#${kw.rank || '?'}</div>
-        </div>
-      </div>`).join('');
-  };
-
-  renderList(jumps, 'big-jumps-list', 'up');
-  renderList(drops, 'big-drops-list', 'down');
-}
-
 function updateWinsBar() {
-  const domainFilterVal = document.getElementById('domain-filter').value;
-  const kws = domainFilterVal === 'all' ? allKeywords : allKeywords.filter(k => String(k.domainId) === String(domainFilterVal));
-
-  const improved = kws.filter(k => k._change > 0).length;
-  const declined = kws.filter(k => k._change < 0).length;
-  const unchanged = kws.filter(k => k._change === 0).length;
-  const netScore = kws.reduce((sum, k) => sum + (k._change || 0), 0);
-  const total = improved + declined;
-  const pct = total > 0 ? Math.round((improved / total) * 100) : 50;
-
-  document.getElementById('wins-improved').textContent = improved;
-  document.getElementById('wins-declined').textContent = declined;
-  document.getElementById('wins-unchanged').textContent = unchanged;
-  document.getElementById('wins-score').textContent = (netScore >= 0 ? '+' : '') + netScore;
-  document.getElementById('wins-bar-fill').style.width = pct + '%';
+  const kws=getFilteredKws();
+  const imp=kws.filter(k=>k._change>0).length, dec=kws.filter(k=>k._change<0).length;
+  const unc=kws.filter(k=>k._change===0).length, net=kws.reduce((s,k)=>s+(k._change||0),0);
+  const pct=(imp+dec)>0?Math.round(imp/(imp+dec)*100):50;
+  document.getElementById('wins-improved').textContent=imp;
+  document.getElementById('wins-declined').textContent=dec;
+  document.getElementById('wins-unchanged').textContent=unc;
+  document.getElementById('wins-score').textContent=(net>=0?'+':'')+net;
+  document.getElementById('wins-bar-fill').style.width=pct+'%';
 }
 
+// ─── MOVERS ──────────────────────────────────────────────────
+function setMovementFilter(f) {
+  movementFilter=f;
+  ['all','entered','exited'].forEach(x=>{
+    document.getElementById(`pill-${x}`).className='pill'+(x===f?` active-${f==='all'?'all':f==='entered'?'up':'down'}`:'');
+  });
+  renderMovers();
+}
+function renderMovers() {
+  const kws=getFilteredKws();
+  [3,10,20].forEach(t => renderMoverPanel(t,kws));
+  document.getElementById('movements-badge').textContent=kws.filter(k=>k._hasMovement).length+' movements';
+}
+function renderMoverPanel(t,kws) {
+  const ek=`_enteredTop${t}`, xk=`_exitedTop${t}`;
+  let items=kws.filter(k=>k[ek]||k[xk]);
+  if(movementFilter==='entered') items=items.filter(k=>k[ek]);
+  if(movementFilter==='exited')  items=items.filter(k=>k[xk]);
+  document.getElementById(`panel-count-${t}`).textContent=items.length+' keywords';
+  document.getElementById(`movers-${t}`).innerHTML = items.length===0
+    ? `<div class="empty-panel"><div class="empty-icon">✓</div>No movements in Top ${t}</div>`
+    : items.map(kw=>{ const en=kw[ek]; return `<div class="mover-item"><div class="mover-direction ${en?'entered':'exited'}">${en?'↑':'↓'}</div><div class="mover-info"><div class="mover-keyword">${esc(kw.keyword)}</div><div class="mover-domain">${esc(kw.domainName)}</div></div><div class="mover-ranks"><div class="rank-from">#${kw.rank_compare??'?'}</div><div class="rank-to ${en?'up':'down'}">#${kw.rank??'?'}</div></div></div>`; }).join('');
+}
+function renderBigMovers() {
+  const kws=getFilteredKws();
+  const jumps=kws.filter(k=>k._bigJump).sort((a,b)=>b._change-a._change);
+  const drops=kws.filter(k=>k._bigDrop).sort((a,b)=>a._change-b._change);
+  document.getElementById('big-movers-badge').textContent=(jumps.length+drops.length)+' keywords';
+  document.getElementById('big-jumps-count').textContent=jumps.length+' keywords';
+  document.getElementById('big-drops-count').textContent=drops.length+' keywords';
+  const renderList=(items,id,type)=>{
+    document.getElementById(id).innerHTML=items.length===0
+      ?`<div class="empty-panel"><div class="empty-icon">✓</div>No big ${type==='up'?'jumps':'drops'} today</div>`
+      :items.slice(0,20).map(kw=>`<div class="big-mover-item"><div class="big-mover-badge ${type}">${type==='up'?'+':''}${kw._change}</div><div class="mover-info"><div class="mover-keyword">${esc(kw.keyword)}</div><div class="mover-domain">${esc(kw.domainName)}</div></div><div class="mover-ranks"><div class="rank-from">#${kw.rank_compare??'?'}</div><div class="rank-to ${type}">#${kw.rank??'?'}</div></div></div>`).join('');
+  };
+  renderList(jumps,'big-jumps-list','up'); renderList(drops,'big-drops-list','down');
+}
 
+// ─── KEYWORD TABLE ───────────────────────────────────────────
 function applyFilters() {
-  const domainFilterVal = document.getElementById('domain-filter').value;
-  const kwSearch = document.getElementById('kw-search').value.toLowerCase();
-  const mvFilter = document.getElementById('movement-filter').value;
-
-  filteredKeywords = allKeywords.filter(kw => {
-    if (domainFilterVal !== 'all' && String(kw.domainId) !== String(domainFilterVal)) return false;
-    if (kwSearch && !kw.keyword.toLowerCase().includes(kwSearch)) return false;
-    if (mvFilter === 'up' && kw._change <= 0) return false;
-    if (mvFilter === 'down' && kw._change >= 0) return false;
-    if (mvFilter === 'top3' && !kw._inTop3) return false;
-    if (mvFilter === 'top10' && !kw._inTop10) return false;
-    if (mvFilter === 'top20' && !kw._inTop20) return false;
-    if (mvFilter === 'bigjump' && !kw._bigJump) return false;
-    if (mvFilter === 'bigdrop' && !kw._bigDrop) return false;
+  const dom=document.getElementById('domain-filter').value;
+  const kws=document.getElementById('kw-search').value.toLowerCase();
+  const mv=document.getElementById('movement-filter').value;
+  filteredKeywords=allKeywords.filter(kw=>{
+    if(dom!=='all'&&String(kw.domainId)!==String(dom)) return false;
+    if(kws&&!kw.keyword.toLowerCase().includes(kws)) return false;
+    if(mv==='up'&&kw._change<=0) return false;
+    if(mv==='down'&&kw._change>=0) return false;
+    if(mv==='top3'&&!kw._inTop3) return false;
+    if(mv==='top10'&&!kw._inTop10) return false;
+    if(mv==='top20'&&!kw._inTop20) return false;
+    if(mv==='bigjump'&&!kw._bigJump) return false;
+    if(mv==='bigdrop'&&!kw._bigDrop) return false;
     return true;
   });
-
-  sortKeywords();
-  currentPage = 1;
-  renderTable();
-  renderMovers();
-  renderBigMovers();
-  updateStats();
-  updateWinsBar();
+  sortKeywords(); currentPage=1; renderTable(); renderMovers(); renderBigMovers(); updateStats(); updateWinsBar();
 }
-
 function sortKeywords() {
-  filteredKeywords.sort((a, b) => {
-    let av, bv;
-    if (sortField === 'keyword') { av = a.keyword || ''; bv = b.keyword || ''; return sortDir * av.localeCompare(bv); }
-    if (sortField === 'domain') { av = a.domainName || ''; bv = b.domainName || ''; return sortDir * av.localeCompare(bv); }
-    if (sortField === 'rank') { av = a.rank || 999; bv = b.rank || 999; return sortDir * (av - bv); }
-    if (sortField === 'change') { av = a._change || 0; bv = b._change || 0; return sortDir * (av - bv); }
-    if (sortField === 'volume') { av = a.search_volume || 0; bv = b.search_volume || 0; return sortDir * (av - bv); }
+  filteredKeywords.sort((a,b)=>{
+    if(sortField==='keyword') return sortDir*a.keyword.localeCompare(b.keyword);
+    if(sortField==='domain')  return sortDir*a.domainName.localeCompare(b.domainName);
+    if(sortField==='rank')    return sortDir*((a.rank??999)-(b.rank??999));
+    if(sortField==='change')  return sortDir*((a._change||0)-(b._change||0));
+    if(sortField==='volume')  return sortDir*((a.search_volume||0)-(b.search_volume||0));
     return 0;
   });
 }
-
-function sortTable(field) {
-  if (sortField === field) sortDir *= -1; else { sortField = field; sortDir = -1; }
-  sortKeywords();
-  currentPage = 1;
-  renderTable();
-}
-
+function sortTable(f){ if(sortField===f) sortDir*=-1; else{sortField=f;sortDir=-1;} sortKeywords(); currentPage=1; renderTable(); }
 function renderTable() {
-  const start = (currentPage - 1) * PAGE_SIZE;
-  const pageKws = filteredKeywords.slice(start, start + PAGE_SIZE);
-  const tbody = document.getElementById('kw-table-body');
-
-  tbody.innerHTML = pageKws.map(kw => {
-    const change = kw._change;
-    const changeStr = change > 0 ? `+${change}` : change < 0 ? `${change}` : '—';
-    const changeCls = change > 0 ? 'pos' : change < 0 ? 'neg' : 'zero';
-    const changeArrow = change > 0 ? '↑' : change < 0 ? '↓' : '';
-
-    const tags = [];
-    if (kw._bigJump) tags.push('<span class="fire-badge hot">🚀 +' + kw._change + '</span>');
-    if (kw._bigDrop) tags.push('<span class="fire-badge danger">⚠️ ' + kw._change + '</span>');
-    if (kw._inTop3) tags.push('<span class="threshold-tag tag-top3">Top 3</span>');
-    else if (kw._enteredTop3) tags.push('<span class="threshold-tag tag-top3">↑ Top 3</span>');
-    else if (kw._exitedTop3) tags.push('<span class="threshold-tag" style="background:rgba(255,92,92,0.1);color:var(--down)">↓ Top 3</span>');
-
-    if (kw._inTop10 && !kw._inTop3) tags.push('<span class="threshold-tag tag-top10">Top 10</span>');
-    else if (kw._enteredTop10 && !kw._enteredTop3) tags.push('<span class="threshold-tag tag-top10">↑ Top 10</span>');
-    else if (kw._exitedTop10 && !kw._exitedTop3) tags.push('<span class="threshold-tag" style="background:rgba(255,92,92,0.1);color:var(--down)">↓ Top 10</span>');
-
-    if (kw._inTop20 && !kw._inTop10) tags.push('<span class="threshold-tag tag-top20">Top 20</span>');
-    else if (kw._enteredTop20 && !kw._enteredTop10) tags.push('<span class="threshold-tag tag-top20">↑ Top 20</span>');
-    else if (kw._exitedTop20 && !kw._exitedTop10) tags.push('<span class="threshold-tag" style="background:rgba(255,92,92,0.1);color:var(--down)">↓ Top 20</span>');
-
-    return `
-      <tr>
-        <td class="kw-cell">${escHtml(kw.keyword)}</td>
-        <td class="domain-cell">${escHtml(kw.domainName)}</td>
-        <td class="rank-cell">${kw.rank ? '#' + kw.rank : '—'}</td>
-        <td><div class="change-cell ${changeCls}">${changeArrow} ${changeStr}</div></td>
-        <td><div class="threshold-tags">${tags.join('') || '<span style="color:var(--muted);font-size:12px">—</span>'}</div></td>
-        <td class="vol-cell">${kw.search_volume ? kw.search_volume.toLocaleString() : '—'}</td>
-      </tr>`;
-
-  const total = filteredKeywords.length;
-  const totalPages = Math.ceil(total / PAGE_SIZE);
-  document.getElementById('pagination-info').textContent = `Showing ${start + 1}–${Math.min(start + PAGE_SIZE, total)} of ${total} keywords`;
-  document.getElementById('table-badge').textContent = total + ' keywords';
-
-  const pageBtns = document.getElementById('page-btns');
-  pageBtns.innerHTML = '';
-  if (totalPages <= 1) return;
-
-  const addBtn = (label, page, active, disabled) => {
-    const b = document.createElement('button');
-    b.className = 'page-btn' + (active ? ' active' : '');
-    b.textContent = label;
-    b.disabled = disabled;
-    b.onclick = () => { currentPage = page; renderTable(); };
-    pageBtns.appendChild(b);
-  };
-
-  addBtn('←', currentPage - 1, false, currentPage === 1);
-  const startP = Math.max(1, currentPage - 2);
-  const endP = Math.min(totalPages, startP + 4);
-  for (let i = startP; i <= endP; i++) addBtn(i, i, i === currentPage, false);
-  addBtn('→', currentPage + 1, false, currentPage === totalPages);
-}
-
-// ─── UI HELPERS ───────────────────────────────────────────────
-function setMovementFilter(filter) {
-  movementFilter = filter;
-  ['all', 'entered', 'exited'].forEach(f => {
-    document.getElementById(`pill-${f}`).className = 'pill' + (f === filter ? ` active-${f === 'all' ? 'all' : f === 'entered' ? 'up' : 'down'}` : '');
-  });
-  renderMovers();
-}
-
-function showLoading(text) {
-  document.getElementById('setup-screen').style.display = 'none';
-  document.getElementById('dashboard').style.display = 'none';
-  document.getElementById('loading-screen').style.display = 'flex';
-}
-
-function setLoadingText(t) { document.getElementById('loading-text').textContent = t; }
-
-function showDashboard() {
-  document.getElementById('loading-screen').style.display = 'none';
-  document.getElementById('dashboard').style.display = 'block';
-  document.getElementById('refresh-btn').style.display = 'flex';
-  const masked = apiKey.substring(0, 6) + '••••••••' + apiKey.slice(-4);
-  document.getElementById('key-display').textContent = masked;
-}
-
-function showSetup() {
-  document.getElementById('loading-screen').style.display = 'none';
-  document.getElementById('setup-screen').style.display = 'flex';
-}
-
-function showError(msg) {
-  const el = document.getElementById('error-msg');
-  el.textContent = msg;
-  el.style.display = 'block';
-  document.getElementById('loading-screen').style.display = 'none';
-  document.getElementById('setup-screen').style.display = 'flex';
-}
-
-function updateLastUpdated() {
-  document.getElementById('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
-}
-
-function escHtml(str) {
-  if (!str) return '';
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  document.getElementById('table-badge').textContent=filteredKeywords.length+' keywords';
+  const page=paginate(filteredKeywords,currentPage,PAGE_SIZE,'pagination-info','page-btns',p=>{currentPage=p;renderTable();});
+  document.getElementById('kw-table-body').innerHTML=page.map(kw=>{
+    const ch=kw._change, cs=ch>0?`+${ch}`:ch<0?`${ch}`:'—', cc=ch>0?'pos':ch<0?'neg':'zero', ca=ch>0?'↑':ch<0?'↓':'';
+    const tags=[];
+    if(kw._bigJump) tags.push(`<span class="fire-badge hot">🚀 +${kw._change}</span>`);
+    if(kw._bigDrop) tags.push(`<span class="fire-badge danger">⚠️ ${kw._change}</span>`);
+    if(kw._inTop3) tags.push('<span class="threshold-tag tag-top3">Top 3</span>');
+    else if(kw._enteredTop3) tags.push('<span class="threshold-tag tag-top3">↑ Top 3</span>');
+    else if(kw._exitedTop3)  tags.push('<span class="threshold-tag" style="background:rgba(255,92,92,.1);color:var(--down)">↓ Top 3</span>');
+    if(kw._inTop10&&!kw._inTop3) tags.push('<span class="threshold-tag tag-top10">Top 10</span>');
+    else if(kw._enteredTop10&&!kw._enteredTop3) tags.push('<span class="threshold-tag tag-top10">↑ Top 10</span>');
+    else if(kw._exitedTop10&&!kw._exitedTop3) tags.push('<span class="threshold-tag" style="background:rgba(255,92,92,.1);color:var(--down)">↓ Top 10</span>');
+    if(kw._inTop20&&!kw._inTop10) tags.push('<span class="threshold-tag tag-top20">Top 20</span>');
+    else if(kw._enteredTop20&&!kw._enteredTop10) tags.push('<span class="threshold-tag tag-top20">↑ Top 20</span>');
+    else if(kw._exitedTop20&&!kw._exitedTop10) tags.push('<span class="threshold-tag" style="background:rgba(255,92,92,.1);color:var(--down)">↓ Top 20</span>');
+    return `<tr><td class="kw-cell">${esc(kw.keyword)}</td><td class="domain-cell">${esc(kw.domainName)}</td><td class="rank-cell">${kw.rank?'#'+kw.rank:'—'}</td><td><div class="change-cell ${cc}">${ca} ${cs}</div></td><td><div class="threshold-tags">${tags.join('')||'<span style="color:var(--muted);font-size:12px">—</span>'}</div></td><td class="vol-cell">${kw.search_volume?kw.search_volume.toLocaleString():'—'}</td></tr>`;
+  }).join('');
 }
 
 // ─── SITES VIEW ──────────────────────────────────────────────
 function buildSitesData() {
-  const map = {};
-  allKeywords.forEach(kw => {
-    const key = kw.domainId;
-    if (!map[key]) {
-      map[key] = {
-        domainId: kw.domainId,
-        domain: kw.domainName,
-        top3: 0, top10: 0, top20: 0, total: 0
-      };
-    }
-    const s = map[key];
-    s.total++;
-    if (kw._inTop3) s.top3++;
-    if (kw._inTop10) s.top10++;
-    if (kw._inTop20) s.top20++;
+  const map={};
+  allKeywords.forEach(kw=>{
+    if(!map[kw.domainId]) map[kw.domainId]={domainId:kw.domainId,domain:kw.domainName,top3:0,top10:0,top20:0,total:0};
+    const s=map[kw.domainId]; s.total++;
+    if(kw._inTop3)s.top3++; if(kw._inTop10)s.top10++; if(kw._inTop20)s.top20++;
   });
-  sitesData = Object.values(map);
-
-  // Update summary stats
-  document.getElementById('site-stat-top3').textContent = sitesData.filter(s => s.top3 > 0).length;
-  document.getElementById('site-stat-top10').textContent = sitesData.filter(s => s.top10 > 0).length;
-  document.getElementById('site-stat-top20').textContent = sitesData.filter(s => s.top20 > 0).length;
-  document.getElementById('site-stat-total').textContent = sitesData.length;
-
+  sitesData=Object.values(map);
+  document.getElementById('site-stat-top3').textContent=sitesData.filter(s=>s.top3>0).length;
+  document.getElementById('site-stat-top10').textContent=sitesData.filter(s=>s.top10>0).length;
+  document.getElementById('site-stat-top20').textContent=sitesData.filter(s=>s.top20>0).length;
+  document.getElementById('site-stat-total').textContent=sitesData.length;
   renderSitesTable();
 }
-
 function setSitesFilter(f) {
-  sitesFilter = f;
-  sitesPage = 1;
-  ['all','top3','top10','top20','none'].forEach(x => {
-    const el = document.getElementById(`spill-${x}`);
-    if (!el) return;
-    el.className = 'sites-filter-pill' + (x === f ? (f === 'all' ? ' active' : ` active-${f === 'none' ? '' : f}`) : '');
-    if (x === f && f === 'none') el.className = 'sites-filter-pill active';
-  });
+  sitesFilter=f; sitesPage=1;
+  const map={all:'active',top3:'active-top3',top10:'active-top10',top20:'active-top20',none:'active'};
+  ['all','top3','top10','top20','none'].forEach(x=>{ const el=document.getElementById(`spill-${x}`); if(el) el.className='sites-filter-pill'+(x===f?' '+map[x]:''); });
   renderSitesTable();
 }
-
-function sortSites(field) {
-  if (sitesSortField === field) sitesSortDir *= -1;
-  else { sitesSortField = field; sitesSortDir = -1; }
-  renderSitesTable();
-}
-
+function sortSites(f){ if(sitesSortField===f)sitesSortDir*=-1;else{sitesSortField=f;sitesSortDir=-1;} renderSitesTable(); }
 function renderSitesTable() {
-  const search = (document.getElementById('sites-search').value || '').toLowerCase();
-
-  filteredSites = sitesData.filter(s => {
-    if (search && !s.domain.toLowerCase().includes(search)) return false;
-    if (sitesFilter === 'top3' && s.top3 === 0) return false;
-    if (sitesFilter === 'top10' && s.top10 === 0) return false;
-    if (sitesFilter === 'top20' && s.top20 === 0) return false;
-    if (sitesFilter === 'none' && (s.top3 > 0 || s.top10 > 0 || s.top20 > 0)) return false;
+  const search=(document.getElementById('sites-search').value||'').toLowerCase();
+  filteredSites=sitesData.filter(s=>{
+    if(search&&!s.domain.toLowerCase().includes(search)) return false;
+    if(sitesFilter==='top3'&&s.top3===0) return false;
+    if(sitesFilter==='top10'&&s.top10===0) return false;
+    if(sitesFilter==='top20'&&s.top20===0) return false;
+    if(sitesFilter==='none'&&(s.top3>0||s.top10>0||s.top20>0)) return false;
     return true;
   });
-
-  // Sort
-  filteredSites.sort((a, b) => {
-    let av, bv;
-    if (sitesSortField === 'domain') { return sitesSortDir * a.domain.localeCompare(b.domain); }
-    av = a[sitesSortField] || 0; bv = b[sitesSortField] || 0;
-    return sitesSortDir * (av - bv);
-  });
-
-  const start = (sitesPage - 1) * SITES_PAGE_SIZE;
-  const page = filteredSites.slice(start, start + SITES_PAGE_SIZE);
-  const tbody = document.getElementById('sites-table-body');
-
-  tbody.innerHTML = page.map(s => {
-    const badges = [];
-    if (s.top3 > 0) badges.push(`<span class="site-badge site-badge-top3">Top 3</span>`);
-    if (s.top10 > 0 && s.top3 === 0) badges.push(`<span class="site-badge site-badge-top10">Top 10</span>`);
-    if (s.top20 > 0 && s.top10 === 0) badges.push(`<span class="site-badge site-badge-top20">Top 20</span>`);
-    const statusHtml = badges.length ? `<div class="site-badges">${badges.join('')}</div>` : `<span class="no-top-rankings">No top rankings</span>`;
-
-    return `<div class="site-row">
-      <div class="site-name"><a href="https://${escHtml(s.domain)}" target="_blank">${escHtml(s.domain)}</a></div>
-      <div class="site-kw-count site-top3-count" style="text-align:center">${s.top3 || '—'}</div>
-      <div class="site-kw-count site-top10-count" style="text-align:center">${s.top10 || '—'}</div>
-      <div class="site-kw-count site-top20-count" style="text-align:center">${s.top20 || '—'}</div>
-      <div class="site-kw-count site-total-count" style="text-align:center">${s.total}</div>
-      <div>${statusHtml}</div>
-    </div>`;
+  filteredSites.sort((a,b)=>sitesSortField==='domain'?sitesSortDir*a.domain.localeCompare(b.domain):sitesSortDir*((a[sitesSortField]||0)-(b[sitesSortField]||0)));
+  const page=paginate(filteredSites,sitesPage,SITES_PAGE_SIZE,'sites-pagination-info','sites-page-btns',p=>{sitesPage=p;renderSitesTable();});
+  document.getElementById('sites-table-body').innerHTML=page.map(s=>{
+    const badges=[];
+    if(s.top3>0) badges.push('<span class="site-badge site-badge-top3">Top 3</span>');
+    else if(s.top10>0) badges.push('<span class="site-badge site-badge-top10">Top 10</span>');
+    else if(s.top20>0) badges.push('<span class="site-badge site-badge-top20">Top 20</span>');
+    return `<div class="site-row"><div class="site-name"><a href="https://${esc(s.domain)}" target="_blank">${esc(s.domain)}</a></div><div class="site-kw-count site-top3-count">${s.top3||'—'}</div><div class="site-kw-count site-top10-count">${s.top10||'—'}</div><div class="site-kw-count site-top20-count">${s.top20||'—'}</div><div class="site-kw-count site-total-count">${s.total}</div><div>${badges.length?`<div class="site-badges">${badges.join('')}</div>`:'<span class="no-top-rankings">No top rankings</span>'}</div></div>`;
   }).join('');
-
-  const total = filteredSites.length;
-  const totalPages = Math.ceil(total / SITES_PAGE_SIZE);
-  document.getElementById('sites-pagination-info').textContent = `Showing ${Math.min(start+1,total)}–${Math.min(start+SITES_PAGE_SIZE, total)} of ${total} sites`;
-
-  const sitesPageBtns = document.getElementById('sites-page-btns');
-  sitesPageBtns.innerHTML = '';
-  if (totalPages <= 1) return;
-  const addBtn = (label, page, active, disabled) => {
-    const b = document.createElement('button');
-    b.className = 'page-btn' + (active ? ' active' : '');
-    b.textContent = label; b.disabled = disabled;
-    b.onclick = () => { sitesPage = page; renderSitesTable(); };
-    sitesPageBtns.appendChild(b);
-  };
-  addBtn('←', sitesPage - 1, false, sitesPage === 1);
-  const sp = Math.max(1, sitesPage - 2), ep = Math.min(totalPages, sp + 4);
-  for (let i = sp; i <= ep; i++) addBtn(i, i, i === sitesPage, false);
-  addBtn('→', sitesPage + 1, false, sitesPage === totalPages);
 }
 
 // ─── OPPORTUNITIES ────────────────────────────────────────────
-let oppData = [];
-let filteredOpp = [];
-let oppFilter = 'all';
-let oppSortField = 'score';
-let oppSortDir = -1;
-let oppPage = 1;
-const OPP_PAGE_SIZE = 50;
-
-async function fetchAhrefsData() {
-  const key = document.getElementById('ahrefs-key-input').value.trim();
-  if (!key) { setAhrefsStatus('Please enter your Ahrefs API key', 'err'); return; }
-
-  const btn = document.getElementById('fetch-ahrefs-btn');
-  btn.disabled = true;
-  btn.textContent = '⏳ Fetching...';
-  setAhrefsStatus('Preparing keyword list...', '');
-
-  // Get keywords ranking 1-50
-  const targetKws = allKeywords.filter(kw => kw.rank !== null && kw.rank >= 1 && kw.rank <= 50);
-  setAhrefsStatus(`Found ${targetKws.length} keywords ranking 1–50. Fetching keyword difficulty from Ahrefs...`, '');
-
-  try {
-    // Fetch only KD from Ahrefs — volume comes from AccuRanker
-    const kwTexts = [...new Set(targetKws.map(kw => kw.keyword))];
-    const batches = chunkArray(kwTexts, 100);
-    let kdMap = {};
-
-    for (let i = 0; i < batches.length; i++) {
-      setAhrefsStatus(`Fetching KD... batch ${i+1}/${batches.length}`, '');
-      const batch = batches[i];
-      const res = await fetch(`/api/proxy?ahrefs=1&keywords=${encodeURIComponent(batch.join('\n'))}&country=us`, {
-        headers: { 'Authorization': `Bearer ${key}` }
-      });
-      const data = await res.json();
-      if (data.keywords) {
-        data.keywords.forEach(kw => {
-          kdMap[kw.keyword.toLowerCase()] = kw.difficulty ?? null;
-        });
-      }
-      if (i < batches.length - 1) await sleep(500);
-    }
-
-    // Build opportunity data using AccuRanker AI volume + Ahrefs KD
-    oppData = targetKws.map(kw => {
-      const kd = kdMap[kw.keyword.toLowerCase()] ?? null;
-      const volume = kw.search_volume || 0;
-      const rank = kw.rank;
-      const score = volume > 0 && rank > 0 ? Math.round(volume / rank) : 0;
-
-      let opportunity;
-      if (rank <= 3) opportunity = 'protect';
-      else if (rank <= 10) opportunity = 'push';
-      else if (rank <= 20) opportunity = 'quickwin';
-      else opportunity = 'build';
-
-      return {
-        keyword: kw.keyword,
-        domain: kw.domainName,
-        domainId: kw.domainId,
-        rank, volume, kd, score, opportunity
-      };
-    });
-
-    // Cache Ahrefs data
-    try {
-      const d = await openDB();
-      const tx = d.transaction('cache', 'readwrite');
-      tx.objectStore('cache').put({ ts: Date.now(), data: oppData }, 'ahrefs');
-    } catch(e) {}
-
-    setAhrefsStatus(`✓ Loaded ${oppData.length} opportunities`, 'ok');
-    localStorage.setItem('ar_ahrefs_key', key);
-    populateOppDomainFilter();
-    renderOppStats();
-    renderOppTable();
-
-  } catch(err) {
-    setAhrefsStatus(`Error: ${err.message}`, 'err');
-    console.error(err);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '🔍 Fetch Opportunity Data';
-  }
-}
-
-async function loadCachedAhrefsData() {
-  try {
-    const d = await openDB();
-    return new Promise(resolve => {
-      const tx = d.transaction('cache', 'readonly');
-      const req = tx.objectStore('cache').get('ahrefs');
-      req.onsuccess = () => resolve(req.result || null);
-      req.onerror = () => resolve(null);
-    });
-  } catch { return null; }
-}
-
-function setAhrefsStatus(msg, type) {
-  const el = document.getElementById('ahrefs-status');
-  el.textContent = msg;
-  el.className = 'ahrefs-status' + (type ? ` ${type}` : '');
-}
-
 function setOppFilter(f) {
-  oppFilter = f;
-  oppPage = 1;
-  ['all','protect','push','quickwin','build'].forEach(x => {
-    const el = document.getElementById(`opill-${x}`);
-    if (!el) return;
-    const map = { all: 'active-all', protect: 'active-top3', push: 'active-top10', quickwin: 'active-up', build: 'active-top20' };
-    el.className = 'pill' + (x === f ? ` ${map[x]}` : '');
-  });
+  oppFilter=f; oppPage=1;
+  const map={all:'active-all',protect:'active-top3',push:'active-top10',quickwin:'active-up',build:'active-top20'};
+  ['all','protect','push','quickwin','build'].forEach(x=>{ const el=document.getElementById(`opill-${x}`); if(el) el.className='pill'+(x===f?' '+map[x]:''); });
   renderOppTable();
 }
-
-function sortOpp(field) {
-  if (oppSortField === field) oppSortDir *= -1;
-  else { oppSortField = field; oppSortDir = -1; }
-  renderOppTable();
-}
-
+function sortOpp(f){ if(oppSortField===f)oppSortDir*=-1;else{oppSortField=f;oppSortDir=-1;} renderOppTable(); }
 function populateOppDomainFilter() {
-  const sel = document.getElementById('opp-domain-filter');
-  const current = sel.value;
-  sel.innerHTML = '<option value="all">All Domains</option>';
-  const domains = [...new Set(oppData.map(o => o.domainId))];
-  domains.forEach(id => {
-    const name = oppData.find(o => o.domainId === id)?.domain || id;
-    const opt = document.createElement('option');
-    opt.value = id; opt.textContent = name;
-    sel.appendChild(opt);
+  const sel=document.getElementById('opp-domain-filter'), cur=sel.value;
+  sel.innerHTML='<option value="all">All Domains</option>';
+  [...new Set(oppData.map(o=>o.domainId))].forEach(id=>{
+    const name=oppData.find(o=>o.domainId===id)?.domain||id;
+    const o=document.createElement('option'); o.value=id; o.textContent=name; sel.appendChild(o);
   });
-  sel.value = current;
+  sel.value=cur;
 }
-
 function renderOppStats() {
-  document.getElementById('opp-stat-protect').textContent = oppData.filter(o => o.opportunity === 'protect').length;
-  document.getElementById('opp-stat-push').textContent = oppData.filter(o => o.opportunity === 'push').length;
-  document.getElementById('opp-stat-quickwin').textContent = oppData.filter(o => o.opportunity === 'quickwin').length;
-  document.getElementById('opp-stat-build').textContent = oppData.filter(o => o.opportunity === 'build').length;
+  document.getElementById('opp-stat-protect').textContent=oppData.filter(o=>o.opportunity==='protect').length;
+  document.getElementById('opp-stat-push').textContent=oppData.filter(o=>o.opportunity==='push').length;
+  document.getElementById('opp-stat-quickwin').textContent=oppData.filter(o=>o.opportunity==='quickwin').length;
+  document.getElementById('opp-stat-build').textContent=oppData.filter(o=>o.opportunity==='build').length;
 }
-
 function renderOppTable() {
-  const domFilter = document.getElementById('opp-domain-filter').value;
-  const search = (document.getElementById('opp-search').value || '').toLowerCase();
-
-  filteredOpp = oppData.filter(o => {
-    if (domFilter !== 'all' && String(o.domainId) !== String(domFilter)) return false;
-    if (search && !o.keyword.toLowerCase().includes(search) && !o.domain.toLowerCase().includes(search)) return false;
-    if (oppFilter !== 'all' && o.opportunity !== oppFilter) return false;
+  const dom=document.getElementById('opp-domain-filter').value;
+  const search=(document.getElementById('opp-search').value||'').toLowerCase();
+  filteredOpp=oppData.filter(o=>{
+    if(dom!=='all'&&String(o.domainId)!==String(dom)) return false;
+    if(search&&!o.keyword.toLowerCase().includes(search)&&!o.domain.toLowerCase().includes(search)) return false;
+    if(oppFilter!=='all'&&o.opportunity!==oppFilter) return false;
     return true;
   });
-
-  filteredOpp.sort((a, b) => {
-    let av, bv;
-    if (oppSortField === 'keyword') return oppSortDir * a.keyword.localeCompare(b.keyword);
-    if (oppSortField === 'domain') return oppSortDir * a.domain.localeCompare(b.domain);
-    av = a[oppSortField] ?? -1; bv = b[oppSortField] ?? -1;
-    return oppSortDir * (av - bv);
-  });
-
-  const start = (oppPage - 1) * OPP_PAGE_SIZE;
-  const page = filteredOpp.slice(start, start + OPP_PAGE_SIZE);
-  const tbody = document.getElementById('opp-table-body');
-
-  if (oppData.length === 0) {
-    tbody.innerHTML = `<div class="empty-panel" style="padding:60px"><div class="empty-icon">🔍</div>Enter your Ahrefs API key above and click "Fetch Opportunity Data"</div>`;
-    return;
-  }
-
-  if (filteredOpp.length === 0) {
-    tbody.innerHTML = `<div class="empty-panel" style="padding:40px"><div class="empty-icon">✓</div>No keywords match the current filters</div>`;
-    return;
-  }
-
-  const oppLabels = {
-    protect: '<span class="opp-label opp-protect">🏆 Protect</span>',
-    push: '<span class="opp-label opp-push">⚡ Push</span>',
-    quickwin: '<span class="opp-label opp-quickwin">🔥 Quick Win</span>',
-    build: '<span class="opp-label opp-build">📈 Build</span>'
-  };
-
-  tbody.innerHTML = page.map(o => {
-    const kdHtml = o.kd !== null ? (() => {
-      const cls = o.kd < 30 ? 'kd-easy' : o.kd < 60 ? 'kd-medium' : 'kd-hard';
-      return `<div class="kd-bar"><div class="kd-dot ${cls}"></div>${o.kd}</div>`;
-    })() : '<span style="color:var(--muted)">—</span>';
-
-    return `<div class="opp-row">
-      <div class="kw-cell">${escHtml(o.keyword)}</div>
-      <div class="domain-cell" style="font-size:11px">${escHtml(o.domain)}</div>
-      <div class="rank-cell" style="text-align:center">#${o.rank}</div>
-      <div class="vol-cell" style="text-align:center">${o.volume ? o.volume.toLocaleString() : '—'}</div>
-      <div style="text-align:center">${kdHtml}</div>
-      <div class="opp-score" style="text-align:center">${o.score.toLocaleString()}</div>
-      <div>${oppLabels[o.opportunity] || ''}</div>
-    </div>`;
+  filteredOpp.sort((a,b)=>oppSortField==='keyword'?oppSortDir*a.keyword.localeCompare(b.keyword):oppSortField==='domain'?oppSortDir*a.domain.localeCompare(b.domain):oppSortDir*((a[oppSortField]??-1)-(b[oppSortField]??-1)));
+  if(oppData.length===0){ document.getElementById('opp-table-body').innerHTML='<div class="empty-panel" style="padding:60px"><div class="empty-icon">🔍</div>Enter your Ahrefs API key above and click "Fetch Opportunity Data"</div>'; return; }
+  const labels={protect:'<span class="opp-label opp-protect">🏆 Protect</span>',push:'<span class="opp-label opp-push">⚡ Push</span>',quickwin:'<span class="opp-label opp-quickwin">🔥 Quick Win</span>',build:'<span class="opp-label opp-build">📈 Build</span>'};
+  const page=paginate(filteredOpp,oppPage,OPP_PAGE_SIZE,'opp-pagination-info','opp-page-btns',p=>{oppPage=p;renderOppTable();});
+  document.getElementById('opp-table-body').innerHTML=page.map(o=>{
+    const kdCls=o.kd===null?'':o.kd<30?'kd-easy':o.kd<60?'kd-medium':'kd-hard';
+    const kdHtml=o.kd!==null?`<div class="kd-bar"><div class="kd-dot ${kdCls}"></div>${o.kd}</div>`:'<span style="color:var(--muted)">—</span>';
+    return `<div class="opp-row"><div class="kw-cell">${esc(o.keyword)}</div><div class="domain-cell">${esc(o.domain)}</div><div class="rank-cell" style="text-align:center">#${o.rank}</div><div class="vol-cell" style="text-align:center">${o.volume?o.volume.toLocaleString():'—'}</div><div style="text-align:center">${kdHtml}</div><div class="opp-score">${o.score.toLocaleString()}</div><div>${labels[o.opportunity]||''}</div></div>`;
   }).join('');
-
-  const total = filteredOpp.length;
-  const totalPages = Math.ceil(total / OPP_PAGE_SIZE);
-  document.getElementById('opp-pagination-info').textContent = `Showing ${Math.min(start+1,total)}–${Math.min(start+OPP_PAGE_SIZE,total)} of ${total} opportunities`;
-
-  const oppPageBtns = document.getElementById('opp-page-btns');
-  oppPageBtns.innerHTML = '';
-  if (totalPages <= 1) return;
-  const addBtn = (label, page, active, disabled) => {
-    const b = document.createElement('button');
-    b.className = 'page-btn' + (active ? ' active' : '');
-    b.textContent = label; b.disabled = disabled;
-    b.onclick = () => { oppPage = page; renderOppTable(); };
-    oppPageBtns.appendChild(b);
-  };
-  addBtn('←', oppPage-1, false, oppPage===1);
-  const sp = Math.max(1, oppPage-2), ep = Math.min(totalPages, sp+4);
-  for (let i = sp; i <= ep; i++) addBtn(i, i, i===oppPage, false);
-  addBtn('→', oppPage+1, false, oppPage===totalPages);
 }
 
-// ─── TAB SWITCHING ────────────────────────────────────────────
-function switchTab(tab) {
-  ['keywords', 'sites', 'opportunities'].forEach(t => {
-    document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
-    document.getElementById(`tab-btn-${t}`).classList.toggle('active', t === tab);
-  });
-  if (tab === 'sites' && sitesData.length === 0 && allKeywords.length > 0) buildSitesData();
-  if (tab === 'opportunities') {
-    // Load Ahrefs key from storage if saved
-    const savedKey = localStorage.getItem('ar_ahrefs_key');
-    if (savedKey) document.getElementById('ahrefs-key-input').value = savedKey;
-    // Load cached opp data if available
-    if (oppData.length === 0) {
-      loadCachedAhrefsData().then(cached => {
-        if (cached && cached.data) {
-          oppData = cached.data;
-          const age = Math.floor((Date.now() - cached.ts) / 60000);
-          setAhrefsStatus(`Loaded from cache (${age}m ago) — click Fetch to refresh`, 'ok');
-          populateOppDomainFilter();
-          renderOppStats();
-          renderOppTable();
-        }
-      });
+function setAhrefsStatus(msg,type){ const el=document.getElementById('ahrefs-status'); el.textContent=msg; el.className='ahrefs-status'+(type?' '+type:''); }
+
+async function fetchAhrefsData() {
+  const key=document.getElementById('ahrefs-key-input').value.trim();
+  if(!key){ setAhrefsStatus('Please enter your Ahrefs API key','err'); return; }
+  const btn=document.getElementById('fetch-ahrefs-btn');
+  btn.disabled=true; btn.textContent='⏳ Fetching...';
+
+  const targetKws=allKeywords.filter(kw=>kw.rank!==null&&kw.rank>=1&&kw.rank<=50);
+  setAhrefsStatus(`Found ${targetKws.length} keywords ranking 1–50. Fetching KD from Ahrefs...`,'');
+
+  try {
+    const kwTexts=[...new Set(targetKws.map(kw=>kw.keyword))];
+    const batches=chunk(kwTexts,100); let kdMap={};
+    for(let i=0;i<batches.length;i++) {
+      setAhrefsStatus(`Fetching KD... batch ${i+1}/${batches.length}`,'');
+      const res=await fetch(`/api/proxy?ahrefs=1&keywords=${encodeURIComponent(batches[i].join('\n'))}&country=us`,{headers:{'Authorization':`Bearer ${key}`}});
+      const data=await res.json();
+      if(data.keywords) data.keywords.forEach(kw=>{ kdMap[kw.keyword.toLowerCase()]=kw.difficulty??null; });
+      if(i<batches.length-1) await sleep(500);
     }
+
+    oppData=targetKws.map(kw=>{
+      const kd=kdMap[kw.keyword.toLowerCase()]??null;
+      const volume=kw.search_volume||0, rank=kw.rank;
+      const score=volume>0&&rank>0?Math.round(volume/rank):0;
+      const opportunity=rank<=3?'protect':rank<=10?'push':rank<=20?'quickwin':'build';
+      return{keyword:kw.keyword,domain:kw.domainName,domainId:kw.domainId,rank,volume,kd,score,opportunity};
+    });
+
+    await dbSet('ahrefs',{ts:Date.now(),data:oppData});
+    localStorage.setItem('ar_ahrefs_key',key);
+    setAhrefsStatus(`✓ Loaded ${oppData.length} opportunities`,'ok');
+    populateOppDomainFilter(); renderOppStats(); renderOppTable();
+
+  } catch(err) {
+    setAhrefsStatus(`Error: ${err.message}`,'err'); console.error(err);
+  } finally { btn.disabled=false; btn.textContent='🔍 Fetch Opportunity Data'; }
+}
+
+// ─── TABS ────────────────────────────────────────────────────
+function switchTab(tab) {
+  ['keywords','sites','opportunities'].forEach(t=>{
+    document.getElementById(`tab-${t}`).classList.toggle('active',t===tab);
+    document.getElementById(`tab-btn-${t}`).classList.toggle('active',t===tab);
+  });
+  if(tab==='sites'&&sitesData.length===0&&allKeywords.length>0) buildSitesData();
+  if(tab==='opportunities') {
+    const k=localStorage.getItem('ar_ahrefs_key');
+    if(k) document.getElementById('ahrefs-key-input').value=k;
+    if(oppData.length===0) dbGet('ahrefs').then(c=>{
+      if(c?.data){ oppData=c.data; setAhrefsStatus(`Loaded from cache (${getCacheAge(c.ts)}) — click Fetch to refresh`,'ok'); populateOppDomainFilter(); renderOppStats(); renderOppTable(); }
+    });
   }
 }
 
-// ─── UTILITIES ───────────────────────────────────────────────
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-function chunkArray(arr, size) {
-  const out = [];
-  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
-  return out;
-}
-
-function escHtml(str) {
-  if (!str) return '';
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
+// ─── UI HELPERS ──────────────────────────────────────────────
+function showLoading(){ document.getElementById('setup-screen').style.display='none'; document.getElementById('dashboard').style.display='none'; document.getElementById('loading-screen').style.display='flex'; }
+function setLoadingText(t){ document.getElementById('loading-text').textContent=t; }
+function showDashboard(){ document.getElementById('loading-screen').style.display='none'; document.getElementById('dashboard').style.display='block'; document.getElementById('refresh-btn').style.display='flex'; document.getElementById('key-display').textContent=apiKey.substring(0,6)+'••••••••'+apiKey.slice(-4); }
+function showSetup(){ document.getElementById('loading-screen').style.display='none'; document.getElementById('setup-screen').style.display='flex'; }
+function showError(msg){ const el=document.getElementById('error-msg'); el.textContent=msg; el.style.display='block'; document.getElementById('loading-screen').style.display='none'; document.getElementById('setup-screen').style.display='flex'; }
 </script>
 </body>
 </html>
