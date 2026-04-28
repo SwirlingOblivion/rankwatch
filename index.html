@@ -624,7 +624,7 @@ async function fetchKwsForDomain(domain, retries=3) {
   try {
     const today=new Date(), yesterday=new Date(today);
     yesterday.setDate(yesterday.getDate()-1);
-    const fields='id,keyword,ranks.rank,ranks.created_at,search_volume.search_volume,search_volume.ai_search_volume,tags';
+    const fields='id,keyword,ranks.rank,ranks.created_at,search_volume.search_volume,search_volume.ai_search_volume,tags,search_locale.country_code';
     const url=`/api/v4/domains/${domain.id}/keywords/?fields=${fields}&period_from=${fmt(yesterday)}&period_to=${fmt(today)}&page_size=500`;
     const data = await arFetch(url);
     const kws = data.results||data;
@@ -634,7 +634,7 @@ async function fetchKwsForDomain(domain, retries=3) {
       const prevRank  = ranks.length>1 ? ranks[0].rank : null;
       const sv = kw.search_volume||{};
       const volume = sv.ai_search_volume ?? sv.search_volume ?? 0;
-      return { id:kw.id, keyword:kw.keyword, rank:todayRank, rank_compare:prevRank, search_volume:volume, tags:kw.tags, domainId:domain.id, domainName:domain.display_name||domain.domain };
+      return { id:kw.id, keyword:kw.keyword, rank:todayRank, rank_compare:prevRank, search_volume:volume, tags:kw.tags, country:kw.search_locale?.country_code||'us', domainId:domain.id, domainName:domain.display_name||domain.domain };
     });
   } catch(e) {
     if(retries>0 && (e.message.includes('429')||e.message.includes('502'))){ await sleep(3000); return fetchKwsForDomain(domain,retries-1); }
@@ -917,28 +917,45 @@ async function fetchAhrefsData() {
   setAhrefsStatus(`Found ${targetKws.length} keywords ranking 1–50. Fetching KD + Volume from Ahrefs...`,'');
 
   try {
-    const kwTexts=[...new Set(targetKws.map(kw=>kw.keyword))];
-    const batches=chunk(kwTexts,100);
-    let ahMap={}; // keyword -> { kd, volume }
+    // Group unique keywords by country
+    const byCountry = {};
+    targetKws.forEach(kw => {
+      const cc = (kw.country||'us').toLowerCase();
+      if(!byCountry[cc]) byCountry[cc] = new Set();
+      byCountry[cc].add(kw.keyword);
+    });
 
-    for(let i=0;i<batches.length;i++) {
-      setAhrefsStatus(`Fetching from Ahrefs... batch ${i+1}/${batches.length}`,'');
-      const res=await fetch(`/api/proxy?ahrefs=1&keywords=${encodeURIComponent(batches[i].join('\n'))}&country=us`,{headers:{'Authorization':`Bearer ${key}`}});
-      const data=await res.json();
-      if(data.error){ throw new Error(data.error); }
-      if(data.keywords) {
-        data.keywords.forEach(kw=>{
-          ahMap[kw.keyword.toLowerCase()]={ kd:kw.difficulty??null, volume:kw.volume||0 };
+    let ahMap = {};
+    const countries = Object.keys(byCountry);
+    let done = 0;
+
+    for (const cc of countries) {
+      const kwList = [...byCountry[cc]];
+      const batches = chunk(kwList, 100);
+      for (let i = 0; i < batches.length; i++) {
+        done++;
+        setAhrefsStatus(`Fetching from Ahrefs... ${done} batches (${cc.toUpperCase()})`, '');
+        const res = await fetch(`/api/proxy?ahrefs=1&keywords=${encodeURIComponent(batches[i].join(','))}&country=${cc}`, {
+          headers: { 'Authorization': `Bearer ${key}` }
         });
-      } else {
-        // Log raw response for debugging
-        console.log('Ahrefs response:', JSON.stringify(data).substring(0,500));
+        const data = await res.json();
+        if(data.error) throw new Error(data.error);
+        if(data.keywords) {
+          data.keywords.forEach(kw => {
+            // Store by keyword+country key to handle same keyword in multiple countries
+            ahMap[`${kw.keyword.toLowerCase()}|${cc}`] = { kd: kw.difficulty??null, volume: kw.volume||0 };
+          });
+        } else {
+          console.log('Ahrefs response:', JSON.stringify(data).substring(0,300));
+        }
+        if(i < batches.length-1) await sleep(500);
       }
-      if(i<batches.length-1) await sleep(500);
+      await sleep(300);
     }
 
     oppData=targetKws.map(kw=>{
-      const ah=ahMap[kw.keyword.toLowerCase()]||{};
+      const cc = (kw.country||'us').toLowerCase();
+      const ah=ahMap[`${kw.keyword.toLowerCase()}|${cc}`] || ahMap[`${kw.keyword.toLowerCase()}|us`] || {};
       const kd=ah.kd??null;
       const aiVolume=kw.search_volume||0;
       const ahVolume=ah.volume||0;
