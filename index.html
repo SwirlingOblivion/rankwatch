@@ -1327,18 +1327,40 @@ function populateDomainFilter(domains) {
 
 async function fetchKeywordsForDomain(domain, retries = 3) {
   try {
-    const fields = 'id,keyword,rank,rank_compare,search_volume,landing_page,tags,rank_changes';
-    const data = await arFetch(`/api/v4/domains/${domain.id}/keywords/?fields=${fields}&page_size=500`);
+    // Get today and yesterday dates
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const fmt = d => d.toISOString().split('T')[0];
+
+    const fields = 'id,keyword,ranks.rank,ranks.created_at,search_volume.search_volume,tags';
+    const url = `/api/v4/domains/${domain.id}/keywords/?fields=${fields}&period_from=${fmt(yesterday)}&period_to=${fmt(today)}&page_size=500`;
+    const data = await arFetch(url);
     const kws = data.results || data;
+
     // Log first keyword from first successful domain load
     if (allKeywords.length === 0 && kws.length > 0) {
-      console.log('SAMPLE KEYWORD FIELDS:', JSON.stringify(kws[0], null, 2));
+      console.log('SAMPLE KEYWORD:', JSON.stringify(kws[0], null, 2));
     }
-    return kws.map(kw => ({
-      ...kw,
-      domainId: domain.id,
-      domainName: domain.display_name || domain.domain
-    }));
+
+    return kws.map(kw => {
+      // ranks is an array sorted by date - get today and yesterday
+      const ranks = kw.ranks || [];
+      const todayRank = ranks.length > 0 ? ranks[ranks.length - 1].rank : null;
+      const yesterdayRank = ranks.length > 1 ? ranks[0].rank : null;
+      const volume = kw.search_volume ? kw.search_volume.search_volume : null;
+
+      return {
+        id: kw.id,
+        keyword: kw.keyword,
+        rank: todayRank,
+        rank_compare: yesterdayRank,
+        search_volume: volume,
+        tags: kw.tags,
+        domainId: domain.id,
+        domainName: domain.display_name || domain.domain
+      };
+    });
   } catch(e) {
     if (retries > 0 && (e.message.includes('429') || e.message.includes('502'))) {
       await sleep(3000);
