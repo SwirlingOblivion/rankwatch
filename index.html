@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RankWatch — AccuRanker Dashboard</title>
+<title>The Money Maker</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -848,7 +848,7 @@
 <header>
   <div class="logo">
     <div class="logo-dot"></div>
-    RankWatch
+    The Money Maker
   </div>
   <div class="header-right">
     <span class="last-updated" id="last-updated">—</span>
@@ -1180,38 +1180,63 @@ async function arFetch(path) {
   return res.json();
 }
 
-const CACHE_KEY = 'rw_cache';
-const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+// ─── INDEXEDDB CACHE ─────────────────────────────────────────
+const DB_NAME = 'moneymaker';
+const DB_VERSION = 1;
+let db = null;
 
-function saveCache(domains, keywords) {
-  try {
-    const payload = { ts: Date.now(), domains, keywords };
-    localStorage.setItem(CACHE_KEY, JSON.stringify(payload));
-  } catch(e) {
-    // localStorage might be full with 1300+ domains — fail silently
-    console.warn('Cache save failed:', e.message);
-  }
+async function openDB() {
+  if (db) return db;
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = e => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains('cache')) d.createObjectStore('cache');
+    };
+    req.onsuccess = e => { db = e.target.result; resolve(db); };
+    req.onerror = () => reject(req.error);
+  });
 }
 
-function loadCache() {
+async function saveCache(domains, keywords) {
   try {
-    const raw = localStorage.getItem(CACHE_KEY);
-    if (!raw) return null;
-    const payload = JSON.parse(raw);
-    if (Date.now() - payload.ts > CACHE_TTL) return null; // expired
-    return payload;
+    const d = await openDB();
+    const tx = d.transaction('cache', 'readwrite');
+    const store = tx.objectStore('cache');
+    store.put({ ts: Date.now(), domains, keywords }, 'main');
+  } catch(e) { console.warn('Cache save failed:', e.message); }
+}
+
+async function loadCache() {
+  try {
+    const d = await openDB();
+    return new Promise((resolve) => {
+      const tx = d.transaction('cache', 'readonly');
+      const req = tx.objectStore('cache').get('main');
+      req.onsuccess = () => {
+        const val = req.result;
+        if (!val) return resolve(null);
+        const TTL = 24 * 60 * 60 * 1000;
+        if (Date.now() - val.ts > TTL) return resolve(null);
+        resolve(val);
+      };
+      req.onerror = () => resolve(null);
+    });
   } catch { return null; }
 }
 
-function clearCache() {
-  localStorage.removeItem(CACHE_KEY);
+async function clearCache() {
+  try {
+    const d = await openDB();
+    const tx = d.transaction('cache', 'readwrite');
+    tx.objectStore('cache').delete('main');
+  } catch(e) {}
 }
 
 function getCacheAge(ts) {
   const mins = Math.floor((Date.now() - ts) / 60000);
   if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  return `${hrs}h ago`;
+  return `${Math.floor(mins / 60)}h ago`;
 }
 
 async function loadData(forceRefresh = false) {
@@ -1219,23 +1244,13 @@ async function loadData(forceRefresh = false) {
   btn.classList.add('spinning');
   btn.disabled = true;
 
-  // Try cache first (unless forced refresh)
+  // Try cache first
   if (!forceRefresh) {
-    const cached = loadCache();
+    const cached = await loadCache();
     if (cached) {
       setLoadingText('Loading from cache...');
       allKeywords = cached.keywords;
-
-      // Repopulate domain filter
-      const domSel = document.getElementById('domain-filter');
-      domSel.innerHTML = '<option value="all">All Domains</option>';
-      cached.domains.forEach(d => {
-        const opt = document.createElement('option');
-        opt.value = d.id;
-        opt.textContent = d.display_name || d.domain;
-        domSel.appendChild(opt);
-      });
-
+      populateDomainFilter(cached.domains);
       processAndRender();
       buildSitesData();
       showDashboard();
@@ -1245,7 +1260,7 @@ async function loadData(forceRefresh = false) {
       return;
     }
   } else {
-    clearCache();
+    await clearCache();
   }
 
   setLoadingText('Fetching domains...');
@@ -1255,47 +1270,44 @@ async function loadData(forceRefresh = false) {
     let domains = [];
     let nextUrl = '/api/v4/domains/?fields=id,domain,display_name&page_size=100';
     while (nextUrl) {
-      const domainsData = await arFetch(nextUrl);
-      const results = domainsData.results || domainsData;
+      const data = await arFetch(nextUrl);
+      const results = data.results || data;
       domains = domains.concat(results);
-      // Follow next page if available
-      nextUrl = domainsData.next ? domainsData.next.replace('https://app.accuranker.com', '') : null;
+      nextUrl = data.next ? data.next.replace('https://app.accuranker.com', '') : null;
       setLoadingText(`Fetching domains... ${domains.length} found`);
       if (nextUrl) await sleep(300);
     }
 
-    if (!domains || domains.length === 0) {
-      showError('No domains found in your AccuRanker account.');
-      return;
-    }
+    if (!domains.length) { showError('No domains found.'); return; }
 
-    setLoadingText(`Loading keywords for ${domains.length} domain(s)...`);
+    populateDomainFilter(domains);
 
-    // Populate domain filter
-    const domSel = document.getElementById('domain-filter');
-    domSel.innerHTML = '<option value="all">All Domains</option>';
-    domains.forEach(d => {
-      const opt = document.createElement('option');
-      opt.value = d.id;
-      opt.textContent = d.display_name || d.domain;
-      domSel.appendChild(opt);
-    });
+    // Build a domain lookup map
+    const domainMap = {};
+    domains.forEach(d => { domainMap[d.id] = d.display_name || d.domain; });
 
-    // Fetch keywords for all domains in parallel (up to 5 at a time, with delay)
+    // Fetch ALL keywords via account-level paginated endpoint
     allKeywords = [];
-    const chunks = chunkArray(domains, 3);
-    let loaded = 0;
-    for (const chunk of chunks) {
-      const results = await Promise.all(chunk.map(d => fetchKeywordsForDomain(d)));
-      results.forEach(kws => allKeywords.push(...kws));
-      loaded += chunk.length;
-      setLoadingText(`Loading keywords... ${loaded}/${domains.length} domains`);
-      // Pause between batches to respect AccuRanker's 100 req/min rate limit
-      if (loaded < domains.length) await sleep(800);
+    let kwUrl = '/api/v4/keywords/?page_size=500';
+    let page = 1;
+    while (kwUrl) {
+      setLoadingText(`Loading keywords... ${allKeywords.length} loaded`);
+      const data = await arFetch(kwUrl);
+      const results = data.results || data;
+      results.forEach(kw => {
+        allKeywords.push({
+          ...kw,
+          domainId: kw.domain,
+          domainName: domainMap[kw.domain] || kw.domain || 'Unknown'
+        });
+      });
+      kwUrl = data.next ? data.next.replace('https://app.accuranker.com', '') : null;
+      page++;
+      if (kwUrl) await sleep(600);
     }
 
     setLoadingText('Processing rank movements...');
-    saveCache(domains, allKeywords);
+    await saveCache(domains, allKeywords);
     processAndRender();
     buildSitesData();
     showDashboard();
@@ -1308,6 +1320,19 @@ async function loadData(forceRefresh = false) {
     btn.classList.remove('spinning');
     btn.disabled = false;
   }
+}
+
+function populateDomainFilter(domains) {
+  const domSel = document.getElementById('domain-filter');
+  domSel.innerHTML = '<option value="all">All Domains</option>';
+  domains.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d.id;
+    opt.textContent = d.display_name || d.domain;
+    domSel.appendChild(opt);
+  });
+}
+
 }
 
 async function fetchKeywordsForDomain(domain, retries = 3) {
