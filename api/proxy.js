@@ -23,7 +23,10 @@ export default async function handler(req, res) {
       }
     });
 
-    const data = await response.json();
+    const text = await response.text();
+    let data;
+    try { data = JSON.parse(text); } 
+    catch { data = { error: text, status: response.status }; }
 
     // Debug mode: return first keyword's raw fields so we can inspect them
     if (debug === '1') {
