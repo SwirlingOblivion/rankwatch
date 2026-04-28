@@ -225,10 +225,10 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .ahrefs-status.ok{color:var(--up)}
 .ahrefs-status.err{color:var(--down)}
 .opp-table-section{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:32px}
-.opp-row{display:grid;grid-template-columns:1fr 120px 70px 80px 80px 100px 120px;align-items:center;padding:13px 24px;border-bottom:1px solid rgba(255,255,255,.04);transition:background .15s;gap:12px}
+.opp-row{display:grid;grid-template-columns:1fr 120px 60px 90px 90px 70px 80px 110px;align-items:center;padding:13px 24px;border-bottom:1px solid rgba(255,255,255,.04);transition:background .15s;gap:10px}
 .opp-row:hover{background:rgba(255,255,255,.02)}
 .opp-row:last-child{border-bottom:none}
-.opp-row-header{display:grid;grid-template-columns:1fr 120px 70px 80px 80px 100px 120px;align-items:center;padding:11px 24px;gap:12px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);cursor:pointer;user-select:none}
+.opp-row-header{display:grid;grid-template-columns:1fr 120px 60px 90px 90px 70px 80px 110px;align-items:center;padding:11px 24px;gap:10px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);cursor:pointer;user-select:none}
 .opp-row-header span:hover{color:var(--text)}
 .opp-label{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:100px;font-size:11px;font-weight:700;white-space:nowrap}
 .opp-protect{background:rgba(255,200,74,.15);color:var(--top3)}
@@ -446,7 +446,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <button class="fetch-ahrefs-btn" id="fetch-ahrefs-btn" onclick="fetchAhrefsData()">🔍 Fetch Opportunity Data</button>
       <span class="ahrefs-status" id="ahrefs-status">Enter your Ahrefs API key and click Fetch</span>
       <div class="spacer"></div>
-      <span style="font-size:11px;color:var(--muted)">Keywords ranking 1–50 · Volume from AccuRanker AI · KD from Ahrefs · Results cached</span>
+      <span style="font-size:11px;color:var(--muted)">Rankings 1–50 · AI Vol from AccuRanker · KD + Vol from Ahrefs · Weighted score · Results cached</span>
     </div>
     <div class="stats-row">
       <div class="stat-card gold"><div class="stat-label">🏆 Protect</div><div class="stat-value" id="opp-stat-protect">—</div></div>
@@ -470,9 +470,10 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <span onclick="sortOpp('keyword')">Keyword ↕</span>
         <span onclick="sortOpp('domain')">Domain ↕</span>
         <span onclick="sortOpp('rank')" style="text-align:center">Rank ↕</span>
-        <span onclick="sortOpp('volume')" style="text-align:center">AI Volume ↕</span>
+        <span onclick="sortOpp('aiVolume')" style="text-align:center">AI Vol ↕</span>
+        <span onclick="sortOpp('ahVolume')" style="text-align:center">AH Vol ↕</span>
         <span onclick="sortOpp('kd')" style="text-align:center">KD ↕</span>
-        <span onclick="sortOpp('score')" style="text-align:center">Score ↕</span>
+        <span onclick="sortOpp('score')" style="text-align:center;color:var(--accent)">Score ↕</span>
         <span>Opportunity</span>
       </div>
       <div id="opp-table-body">
@@ -872,11 +873,39 @@ function renderOppTable() {
   document.getElementById('opp-table-body').innerHTML=page.map(o=>{
     const kdCls=o.kd===null?'':o.kd<30?'kd-easy':o.kd<60?'kd-medium':'kd-hard';
     const kdHtml=o.kd!==null?`<div class="kd-bar"><div class="kd-dot ${kdCls}"></div>${o.kd}</div>`:'<span style="color:var(--muted)">—</span>';
-    return `<div class="opp-row"><div class="kw-cell">${esc(o.keyword)}</div><div class="domain-cell">${esc(o.domain)}</div><div class="rank-cell" style="text-align:center">#${o.rank}</div><div class="vol-cell" style="text-align:center">${o.volume?o.volume.toLocaleString():'—'}</div><div style="text-align:center">${kdHtml}</div><div class="opp-score">${o.score.toLocaleString()}</div><div>${labels[o.opportunity]||''}</div></div>`;
+    const scoreColor=o.score>=80?'var(--up)':o.score>=50?'var(--gold)':'var(--muted)';
+    return `<div class="opp-row">
+      <div class="kw-cell">${esc(o.keyword)}</div>
+      <div class="domain-cell">${esc(o.domain)}</div>
+      <div class="rank-cell" style="text-align:center">#${o.rank}</div>
+      <div class="vol-cell" style="text-align:center">${o.aiVolume?o.aiVolume.toLocaleString():'—'}</div>
+      <div class="vol-cell" style="text-align:center">${o.ahVolume?o.ahVolume.toLocaleString():'—'}</div>
+      <div style="text-align:center">${kdHtml}</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:800;text-align:center;color:${scoreColor}">${o.score}</div>
+      <div>${labels[o.opportunity]||''}</div>
+    </div>`;
   }).join('');
 }
 
 function setAhrefsStatus(msg,type){ const el=document.getElementById('ahrefs-status'); el.textContent=msg; el.className='ahrefs-status'+(type?' '+type:''); }
+
+// ─── WEIGHTED OPPORTUNITY SCORE ──────────────────────────────
+// Factors:
+//  AI Volume (AccuRanker)  35% — higher = better
+//  Ahrefs Volume           25% — higher = better (cross-validates AI volume)
+//  Position Score          25% — rank 4-10 scores highest (most actionable)
+//  KD Score (inverted)     15% — lower KD = higher score
+function calcScore(rank, aiVolume, ahVolume, kd) {
+  const maxVol = 1000000;
+  // Normalise volumes 0-100
+  const aiScore  = Math.min(aiVolume / maxVol, 1) * 100;
+  const ahScore  = Math.min((ahVolume||0) / maxVol, 1) * 100;
+  // Position score — rank 4-10 = 100, 1-3 = 60 (already winning), 11-20 = 70, 21-50 = 40
+  const posScore = rank<=3?60:rank<=10?100:rank<=20?70:40;
+  // KD score — inverted (0 KD = 100 score, 100 KD = 0 score), null = 50
+  const kdScore  = kd!==null ? Math.max(0, 100-kd) : 50;
+  return Math.round(aiScore*0.35 + ahScore*0.25 + posScore*0.25 + kdScore*0.15);
+}
 
 async function fetchAhrefsData() {
   const key=document.getElementById('ahrefs-key-input').value.trim();
@@ -885,30 +914,44 @@ async function fetchAhrefsData() {
   btn.disabled=true; btn.textContent='⏳ Fetching...';
 
   const targetKws=allKeywords.filter(kw=>kw.rank!==null&&kw.rank>=1&&kw.rank<=50);
-  setAhrefsStatus(`Found ${targetKws.length} keywords ranking 1–50. Fetching KD from Ahrefs...`,'');
+  setAhrefsStatus(`Found ${targetKws.length} keywords ranking 1–50. Fetching KD + Volume from Ahrefs...`,'');
 
   try {
     const kwTexts=[...new Set(targetKws.map(kw=>kw.keyword))];
-    const batches=chunk(kwTexts,100); let kdMap={};
+    const batches=chunk(kwTexts,100);
+    let ahMap={}; // keyword -> { kd, volume }
+
     for(let i=0;i<batches.length;i++) {
-      setAhrefsStatus(`Fetching KD... batch ${i+1}/${batches.length}`,'');
+      setAhrefsStatus(`Fetching from Ahrefs... batch ${i+1}/${batches.length}`,'');
       const res=await fetch(`/api/proxy?ahrefs=1&keywords=${encodeURIComponent(batches[i].join('\n'))}&country=us`,{headers:{'Authorization':`Bearer ${key}`}});
       const data=await res.json();
-      if(data.keywords) data.keywords.forEach(kw=>{ kdMap[kw.keyword.toLowerCase()]=kw.difficulty??null; });
+      if(data.error){ throw new Error(data.error); }
+      if(data.keywords) {
+        data.keywords.forEach(kw=>{
+          ahMap[kw.keyword.toLowerCase()]={ kd:kw.difficulty??null, volume:kw.volume||0 };
+        });
+      } else {
+        // Log raw response for debugging
+        console.log('Ahrefs response:', JSON.stringify(data).substring(0,500));
+      }
       if(i<batches.length-1) await sleep(500);
     }
 
     oppData=targetKws.map(kw=>{
-      const kd=kdMap[kw.keyword.toLowerCase()]??null;
-      const volume=kw.search_volume||0, rank=kw.rank;
-      const score=volume>0&&rank>0?Math.round(volume/rank):0;
+      const ah=ahMap[kw.keyword.toLowerCase()]||{};
+      const kd=ah.kd??null;
+      const aiVolume=kw.search_volume||0;
+      const ahVolume=ah.volume||0;
+      const rank=kw.rank;
+      const score=calcScore(rank,aiVolume,ahVolume,kd);
       const opportunity=rank<=3?'protect':rank<=10?'push':rank<=20?'quickwin':'build';
-      return{keyword:kw.keyword,domain:kw.domainName,domainId:kw.domainId,rank,volume,kd,score,opportunity};
+      return{keyword:kw.keyword,domain:kw.domainName,domainId:kw.domainId,rank,aiVolume,ahVolume,kd,score,opportunity};
     });
 
     await dbSet('ahrefs',{ts:Date.now(),data:oppData});
     localStorage.setItem('ar_ahrefs_key',key);
-    setAhrefsStatus(`✓ Loaded ${oppData.length} opportunities`,'ok');
+    const kdCount=oppData.filter(o=>o.kd!==null).length;
+    setAhrefsStatus(`✓ Loaded ${oppData.length} opportunities · KD available for ${kdCount} keywords`,'ok');
     populateOppDomainFilter(); renderOppStats(); renderOppTable();
 
   } catch(err) {
