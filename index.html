@@ -1327,9 +1327,10 @@ function populateDomainFilter(domains) {
 
 async function fetchKeywordsForDomain(domain, retries = 3) {
   try {
-    const data = await arFetch(`/api/v4/domains/${domain.id}/keywords/?page_size=500`);
+    const fields = 'id,keyword,rank,rank_compare,search_volume,landing_page,tags,rank_changes';
+    const data = await arFetch(`/api/v4/domains/${domain.id}/keywords/?fields=${fields}&page_size=500`);
     const kws = data.results || data;
-    // Log first keyword from first domain to see real field names
+    // Log first keyword from first successful domain load
     if (allKeywords.length === 0 && kws.length > 0) {
       console.log('SAMPLE KEYWORD FIELDS:', JSON.stringify(kws[0], null, 2));
     }
