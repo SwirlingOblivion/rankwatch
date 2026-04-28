@@ -852,7 +852,7 @@
   </div>
   <div class="header-right">
     <span class="last-updated" id="last-updated">—</span>
-    <button class="refresh-btn" id="refresh-btn" onclick="loadData()" style="display:none">
+    <button class="refresh-btn" id="refresh-btn" onclick="loadData(true)" style="display:none">
       <span class="refresh-icon">↻</span> Refresh
     </button>
   </div>
@@ -1180,10 +1180,74 @@ async function arFetch(path) {
   return res.json();
 }
 
-async function loadData() {
+const CACHE_KEY = 'rw_cache';
+const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+
+function saveCache(domains, keywords) {
+  try {
+    const payload = { ts: Date.now(), domains, keywords };
+    localStorage.setItem(CACHE_KEY, JSON.stringify(payload));
+  } catch(e) {
+    // localStorage might be full with 1300+ domains — fail silently
+    console.warn('Cache save failed:', e.message);
+  }
+}
+
+function loadCache() {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const payload = JSON.parse(raw);
+    if (Date.now() - payload.ts > CACHE_TTL) return null; // expired
+    return payload;
+  } catch { return null; }
+}
+
+function clearCache() {
+  localStorage.removeItem(CACHE_KEY);
+}
+
+function getCacheAge(ts) {
+  const mins = Math.floor((Date.now() - ts) / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  return `${hrs}h ago`;
+}
+
+async function loadData(forceRefresh = false) {
   const btn = document.getElementById('refresh-btn');
   btn.classList.add('spinning');
   btn.disabled = true;
+
+  // Try cache first (unless forced refresh)
+  if (!forceRefresh) {
+    const cached = loadCache();
+    if (cached) {
+      setLoadingText('Loading from cache...');
+      allKeywords = cached.keywords;
+
+      // Repopulate domain filter
+      const domSel = document.getElementById('domain-filter');
+      domSel.innerHTML = '<option value="all">All Domains</option>';
+      cached.domains.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.id;
+        opt.textContent = d.display_name || d.domain;
+        domSel.appendChild(opt);
+      });
+
+      processAndRender();
+      buildSitesData();
+      showDashboard();
+      document.getElementById('last-updated').textContent = `Cached ${getCacheAge(cached.ts)} — click Refresh to update`;
+      btn.classList.remove('spinning');
+      btn.disabled = false;
+      return;
+    }
+  } else {
+    clearCache();
+  }
+
   setLoadingText('Fetching domains...');
 
   try {
@@ -1211,12 +1275,16 @@ async function loadData() {
     // Fetch keywords for all domains in parallel (up to 5 at a time)
     allKeywords = [];
     const chunks = chunkArray(domains, 5);
+    let loaded = 0;
     for (const chunk of chunks) {
       const results = await Promise.all(chunk.map(d => fetchKeywordsForDomain(d)));
       results.forEach(kws => allKeywords.push(...kws));
+      loaded += chunk.length;
+      setLoadingText(`Loading keywords... ${loaded}/${domains.length} domains`);
     }
 
     setLoadingText('Processing rank movements...');
+    saveCache(domains, allKeywords);
     processAndRender();
     buildSitesData();
     showDashboard();
