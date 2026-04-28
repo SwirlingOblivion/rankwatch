@@ -1726,6 +1726,18 @@ function switchTab(tab) {
   if (tab === 'sites' && sitesData.length === 0 && allKeywords.length > 0) buildSitesData();
 }
 
+// ─── UTILITIES ───────────────────────────────────────────────
+function chunkArray(arr, size) {
+  const out = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 </script>
 </body>
 </html>
