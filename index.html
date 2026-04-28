@@ -1251,9 +1251,18 @@ async function loadData(forceRefresh = false) {
   setLoadingText('Fetching domains...');
 
   try {
-    // Get all domains
-    const domainsData = await arFetch('/api/v4/domains/?fields=id,domain,display_name');
-    const domains = domainsData.results || domainsData;
+    // Get ALL domains across all pages
+    let domains = [];
+    let nextUrl = '/api/v4/domains/?fields=id,domain,display_name&page_size=100';
+    while (nextUrl) {
+      const domainsData = await arFetch(nextUrl);
+      const results = domainsData.results || domainsData;
+      domains = domains.concat(results);
+      // Follow next page if available
+      nextUrl = domainsData.next ? domainsData.next.replace('https://app.accuranker.com', '') : null;
+      setLoadingText(`Fetching domains... ${domains.length} found`);
+      if (nextUrl) await sleep(300);
+    }
 
     if (!domains || domains.length === 0) {
       showError('No domains found in your AccuRanker account.');
