@@ -1272,15 +1272,17 @@ async function loadData(forceRefresh = false) {
       domSel.appendChild(opt);
     });
 
-    // Fetch keywords for all domains in parallel (up to 5 at a time)
+    // Fetch keywords for all domains in parallel (up to 5 at a time, with delay)
     allKeywords = [];
-    const chunks = chunkArray(domains, 5);
+    const chunks = chunkArray(domains, 3);
     let loaded = 0;
     for (const chunk of chunks) {
       const results = await Promise.all(chunk.map(d => fetchKeywordsForDomain(d)));
       results.forEach(kws => allKeywords.push(...kws));
       loaded += chunk.length;
       setLoadingText(`Loading keywords... ${loaded}/${domains.length} domains`);
+      // Pause between batches to respect AccuRanker's 100 req/min rate limit
+      if (loaded < domains.length) await sleep(800);
     }
 
     setLoadingText('Processing rank movements...');
@@ -1299,13 +1301,17 @@ async function loadData(forceRefresh = false) {
   }
 }
 
-async function fetchKeywordsForDomain(domain) {
+async function fetchKeywordsForDomain(domain, retries = 3) {
   try {
     const fields = 'id,keyword,rank,rank_compare,search_volume,landing_page,tags';
     const data = await arFetch(`/api/v4/domains/${domain.id}/keywords/?fields=${fields}&page_size=500`);
     const kws = data.results || data;
     return kws.map(kw => ({ ...kw, domainId: domain.id, domainName: domain.display_name || domain.domain }));
-  } catch {
+  } catch(e) {
+    if (retries > 0 && e.message.includes('429')) {
+      await sleep(2000);
+      return fetchKeywordsForDomain(domain, retries - 1);
+    }
     return [];
   }
 }
@@ -1727,6 +1733,8 @@ function switchTab(tab) {
 }
 
 // ─── UTILITIES ───────────────────────────────────────────────
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
 function chunkArray(arr, size) {
   const out = [];
   for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
