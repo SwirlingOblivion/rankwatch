@@ -1376,16 +1376,16 @@ function processAndRender() {
   allKeywords.forEach(kw => {
     const cur = kw.rank;
     const prev = kw.rank_compare;
-    kw._change = (cur && prev) ? (prev - cur) : 0; // positive = improved
-    kw._inTop3 = cur && cur <= 3;
-    kw._inTop10 = cur && cur <= 10;
-    kw._inTop20 = cur && cur <= 20;
-    kw._enteredTop3 = cur && prev && cur <= 3 && prev > 3;
-    kw._exitedTop3 = cur && prev && cur > 3 && prev <= 3;
-    kw._enteredTop10 = cur && prev && cur <= 10 && prev > 10;
-    kw._exitedTop10 = cur && prev && cur > 10 && prev <= 10;
-    kw._enteredTop20 = cur && prev && cur <= 20 && prev > 20;
-    kw._exitedTop20 = cur && prev && cur > 20 && prev <= 20;
+    kw._change = (cur && prev) ? (prev - cur) : 0;
+    kw._inTop3 = cur !== null && cur <= 3;
+    kw._inTop10 = cur !== null && cur <= 10;
+    kw._inTop20 = cur !== null && cur <= 20;
+    kw._enteredTop3 = cur !== null && cur <= 3 && (prev === null || prev > 3);
+    kw._exitedTop3 = (cur === null || cur > 3) && prev !== null && prev <= 3;
+    kw._enteredTop10 = cur !== null && cur <= 10 && (prev === null || prev > 10);
+    kw._exitedTop10 = (cur === null || cur > 10) && prev !== null && prev <= 10;
+    kw._enteredTop20 = cur !== null && cur <= 20 && (prev === null || prev > 20);
+    kw._exitedTop20 = (cur === null || cur > 20) && prev !== null && prev <= 20;
     kw._hasMovement = kw._enteredTop3 || kw._exitedTop3 || kw._enteredTop10 || kw._exitedTop10 || kw._enteredTop20 || kw._exitedTop20;
     kw._bigJump = kw._change >= 5;
     kw._bigDrop = kw._change <= -5;
