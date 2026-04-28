@@ -509,6 +509,118 @@
 
   .loading-text { color: var(--muted); font-size: 14px; }
 
+  /* BIG MOVERS */
+  .big-movers-section {
+    margin-bottom: 32px;
+  }
+
+  .big-movers-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  @media (max-width: 700px) { .big-movers-grid { grid-template-columns: 1fr; } }
+
+  .big-movers-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .big-movers-panel.winners { border-color: rgba(61,255,160,0.2); }
+  .big-movers-panel.losers { border-color: rgba(255,92,92,0.2); }
+
+  .big-movers-panel-header {
+    padding: 16px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .big-movers-panel.winners .big-movers-panel-header {
+    background: rgba(61,255,160,0.04);
+  }
+
+  .big-movers-panel.losers .big-movers-panel-header {
+    background: rgba(255,92,92,0.04);
+  }
+
+  .big-mover-item {
+    padding: 12px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    display: flex; align-items: center; gap: 12px;
+    transition: background 0.15s;
+  }
+
+  .big-mover-item:hover { background: rgba(255,255,255,0.02); }
+  .big-mover-item:last-child { border-bottom: none; }
+
+  .big-mover-badge {
+    min-width: 48px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; font-weight: 700;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .big-mover-badge.up { background: rgba(61,255,160,0.12); color: var(--up); }
+  .big-mover-badge.down { background: rgba(255,92,92,0.12); color: var(--down); }
+
+  .fire-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px;
+    border-radius: 100px;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  .fire-badge.hot { background: rgba(61,255,160,0.12); color: var(--up); }
+  .fire-badge.danger { background: rgba(255,92,92,0.12); color: var(--down); }
+
+  /* WINS BAR */
+  .wins-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 24px;
+    margin-bottom: 32px;
+    display: flex; align-items: center; gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .wins-bar-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; }
+
+  .wins-bar-track {
+    flex: 1; min-width: 200px;
+    height: 10px;
+    background: var(--bg);
+    border-radius: 100px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    position: relative;
+  }
+
+  .wins-bar-fill {
+    height: 100%;
+    border-radius: 100px;
+    background: linear-gradient(90deg, var(--up), #7c6aff);
+    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .wins-bar-stats {
+    display: flex; gap: 20px; flex-wrap: wrap;
+  }
+
+  .wins-stat { font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .wins-stat .val { font-weight: 700; }
+  .wins-stat .val.up { color: var(--up); }
+  .wins-stat .val.down { color: var(--down); }
+  .wins-stat .lbl { color: var(--muted); font-size: 11px; margin-left: 4px; }
+
   /* PAGINATION */
   .pagination {
     padding: 16px 24px;
@@ -652,6 +764,46 @@
     </div>
   </div>
 
+  <!-- Wins vs Losses bar -->
+  <div class="wins-bar" id="wins-bar">
+    <span class="wins-bar-label">Today's Performance</span>
+    <div class="wins-bar-track">
+      <div class="wins-bar-fill" id="wins-bar-fill" style="width:50%"></div>
+    </div>
+    <div class="wins-bar-stats">
+      <div class="wins-stat"><span class="val up" id="wins-improved">—</span><span class="lbl">improved</span></div>
+      <div class="wins-stat"><span class="val down" id="wins-declined">—</span><span class="lbl">declined</span></div>
+      <div class="wins-stat"><span class="val" id="wins-unchanged" style="color:var(--muted)">—</span><span class="lbl">unchanged</span></div>
+      <div class="wins-stat"><span class="val" id="wins-score" style="color:var(--accent)">—</span><span class="lbl">net positions</span></div>
+    </div>
+  </div>
+
+  <!-- Big movers -->
+  <div class="big-movers-section">
+    <div class="section-header">
+      <div class="section-title">
+        ⚡ Big Movers <span style="font-size:13px;color:var(--muted);font-weight:400">(5+ positions)</span>
+        <span class="badge" id="big-movers-badge">—</span>
+      </div>
+    </div>
+    <div class="big-movers-grid">
+      <div class="big-movers-panel winners">
+        <div class="big-movers-panel-header">
+          <div class="movers-panel-title" style="color:var(--up)">🚀 Big Jumps</div>
+          <span class="panel-count" id="big-jumps-count">—</span>
+        </div>
+        <div class="movers-list" id="big-jumps-list"></div>
+      </div>
+      <div class="big-movers-panel losers">
+        <div class="big-movers-panel-header">
+          <div class="movers-panel-title" style="color:var(--down)">⚠️ Big Drops</div>
+          <span class="panel-count" id="big-drops-count">—</span>
+        </div>
+        <div class="movers-list" id="big-drops-list"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- Movement panels -->
   <div class="section-header">
     <div class="section-title">
@@ -714,6 +866,8 @@
           <option value="top3">In Top 3</option>
           <option value="top10">In Top 10</option>
           <option value="top20">In Top 20</option>
+          <option value="bigjump">Big jumps (5+)</option>
+          <option value="bigdrop">Big drops (5+)</option>
         </select>
       </div>
     </div>
@@ -781,7 +935,8 @@ function resetKey() {
 
 // ─── FETCH ────────────────────────────────────────────────────
 async function arFetch(path) {
-  const res = await fetch(`https://app.accuranker.com${path}`, {
+  const encodedPath = encodeURIComponent(path);
+  const res = await fetch(`/api/proxy?path=${encodedPath}`, {
     headers: { 'Authorization': `Token ${apiKey}`, 'Accept': 'application/json' }
   });
   if (!res.ok) throw new Error(`API error ${res.status}: ${res.statusText}`);
@@ -866,11 +1021,15 @@ function processAndRender() {
     kw._enteredTop20 = cur && prev && cur <= 20 && prev > 20;
     kw._exitedTop20 = cur && prev && cur > 20 && prev <= 20;
     kw._hasMovement = kw._enteredTop3 || kw._exitedTop3 || kw._enteredTop10 || kw._exitedTop10 || kw._enteredTop20 || kw._exitedTop20;
+    kw._bigJump = kw._change >= 5;
+    kw._bigDrop = kw._change <= -5;
   });
 
   applyFilters();
   renderMovers();
+  renderBigMovers();
   updateStats();
+  updateWinsBar();
   updateLastUpdated();
 }
 
@@ -934,7 +1093,60 @@ function renderMoverPanel(threshold, kws, listId, countId) {
   }).join('');
 }
 
-// ─── FILTERS & TABLE ──────────────────────────────────────────
+function renderBigMovers() {
+  const domainFilterVal = document.getElementById('domain-filter').value;
+  const kws = domainFilterVal === 'all' ? allKeywords : allKeywords.filter(k => String(k.domainId) === String(domainFilterVal));
+
+  const jumps = kws.filter(k => k._bigJump).sort((a,b) => b._change - a._change);
+  const drops = kws.filter(k => k._bigDrop).sort((a,b) => a._change - b._change);
+
+  document.getElementById('big-movers-badge').textContent = (jumps.length + drops.length) + ' keywords';
+  document.getElementById('big-jumps-count').textContent = jumps.length + ' keywords';
+  document.getElementById('big-drops-count').textContent = drops.length + ' keywords';
+
+  const renderList = (items, listId, type) => {
+    const list = document.getElementById(listId);
+    if (items.length === 0) {
+      list.innerHTML = `<div class="empty-panel"><div class="empty-icon">${type === 'up' ? '✓' : '✓'}</div>No big ${type === 'up' ? 'jumps' : 'drops'} today</div>`;
+      return;
+    }
+    list.innerHTML = items.slice(0, 20).map(kw => `
+      <div class="big-mover-item">
+        <div class="big-mover-badge ${type}">${type === 'up' ? '+' : ''}${kw._change}</div>
+        <div class="mover-info">
+          <div class="mover-keyword">${escHtml(kw.keyword)}</div>
+          <div class="mover-domain">${escHtml(kw.domainName)}</div>
+        </div>
+        <div class="mover-ranks">
+          <div class="rank-from">#${kw.rank_compare || '?'}</div>
+          <div class="rank-to ${type}">#${kw.rank || '?'}</div>
+        </div>
+      </div>`).join('');
+  };
+
+  renderList(jumps, 'big-jumps-list', 'up');
+  renderList(drops, 'big-drops-list', 'down');
+}
+
+function updateWinsBar() {
+  const domainFilterVal = document.getElementById('domain-filter').value;
+  const kws = domainFilterVal === 'all' ? allKeywords : allKeywords.filter(k => String(k.domainId) === String(domainFilterVal));
+
+  const improved = kws.filter(k => k._change > 0).length;
+  const declined = kws.filter(k => k._change < 0).length;
+  const unchanged = kws.filter(k => k._change === 0).length;
+  const netScore = kws.reduce((sum, k) => sum + (k._change || 0), 0);
+  const total = improved + declined;
+  const pct = total > 0 ? Math.round((improved / total) * 100) : 50;
+
+  document.getElementById('wins-improved').textContent = improved;
+  document.getElementById('wins-declined').textContent = declined;
+  document.getElementById('wins-unchanged').textContent = unchanged;
+  document.getElementById('wins-score').textContent = (netScore >= 0 ? '+' : '') + netScore;
+  document.getElementById('wins-bar-fill').style.width = pct + '%';
+}
+
+
 function applyFilters() {
   const domainFilterVal = document.getElementById('domain-filter').value;
   const kwSearch = document.getElementById('kw-search').value.toLowerCase();
@@ -948,6 +1160,8 @@ function applyFilters() {
     if (mvFilter === 'top3' && !kw._inTop3) return false;
     if (mvFilter === 'top10' && !kw._inTop10) return false;
     if (mvFilter === 'top20' && !kw._inTop20) return false;
+    if (mvFilter === 'bigjump' && !kw._bigJump) return false;
+    if (mvFilter === 'bigdrop' && !kw._bigDrop) return false;
     return true;
   });
 
@@ -955,7 +1169,9 @@ function applyFilters() {
   currentPage = 1;
   renderTable();
   renderMovers();
+  renderBigMovers();
   updateStats();
+  updateWinsBar();
 }
 
 function sortKeywords() {
@@ -989,6 +1205,8 @@ function renderTable() {
     const changeArrow = change > 0 ? '↑' : change < 0 ? '↓' : '';
 
     const tags = [];
+    if (kw._bigJump) tags.push('<span class="fire-badge hot">🚀 +' + kw._change + '</span>');
+    if (kw._bigDrop) tags.push('<span class="fire-badge danger">⚠️ ' + kw._change + '</span>');
     if (kw._inTop3) tags.push('<span class="threshold-tag tag-top3">Top 3</span>');
     else if (kw._enteredTop3) tags.push('<span class="threshold-tag tag-top3">↑ Top 3</span>');
     else if (kw._exitedTop3) tags.push('<span class="threshold-tag" style="background:rgba(255,92,92,0.1);color:var(--down)">↓ Top 3</span>');
