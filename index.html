@@ -1228,54 +1228,54 @@ async function extractReport() {
       if(nextUrl) await sleep(300);
     }
 
-    // Filter domains by client IDs
-    let domains;
+    // Filter domains using AccuRanker API filter parameter
+    let domains = [];
     const allReportClientIds = ['80066','79817','80050','80177','79816','80048'];
 
-    // ── Detect any unknown client groups ──────────────────────
-    const knownClientMap = JSON.parse(localStorage.getItem('ar_client_map')||'{}');
-    const unknownClients = {};
-    allDomains.forEach(d => {
-      const cid = String(d.client?.id || d.client || '');
-      const cname = d.client?.name || '';
-      if(cid && !allReportClientIds.includes(cid) && !knownClientMap[cid] && cname) {
-        unknownClients[cid] = cname;
-      }
-    });
-    // Prompt user for any new groups
-    for(const [cid, cname] of Object.entries(unknownClients)) {
-      const answer = window.prompt(
-        `New group detected: "${cname}" (ID: ${cid})\n\nWhich report should it belong to?\n\nType: main, riot, rift, levr\n(or leave blank to ignore)`
-      );
-      if(answer && ['main','riot','rift','levr'].includes(answer.trim().toLowerCase())) {
-        knownClientMap[cid] = answer.trim().toLowerCase();
-        // Add to REPORT_CONFIGS dynamically
-        if(answer.trim().toLowerCase() !== 'main' && REPORT_CONFIGS[answer.trim().toLowerCase()]) {
-          REPORT_CONFIGS[answer.trim().toLowerCase()].clientIds.push(cid);
-          allReportClientIds.push(cid);
+    if(cfg.clientIds === null) {
+      // Main = fetch ALL domains, then remove the ones in named reports
+      // First get domain IDs for all named reports
+      const namedDomainIds = new Set();
+      for(const [rname, rcfg] of Object.entries(REPORT_CONFIGS)) {
+        if(rcfg.clientIds === null) continue;
+        for(const cid of rcfg.clientIds) {
+          let url = `/api/v4/domains/?fields=id&filter_id=clients_list_contains&filter_value=${cid}&page_size=100`;
+          try {
+            // Try fetching domains for this client
+            let next = `/api/v4/domains/?fields=id,domain,display_name&page_size=100`;
+            const data = await arFetch(next);
+            // We'll filter by client field after fetching
+          } catch {}
         }
-        localStorage.setItem('ar_client_map', JSON.stringify(knownClientMap));
       }
+
+      // Fetch ALL domains and filter by client field
+      domains = allDomains.filter(d => {
+        const cid = String(d.client?.id || d.client || '');
+        return !allReportClientIds.includes(cid);
+      });
+
+      // Log what we found for debugging
+      console.log('Main report domains:', domains.length, 'of', allDomains.length);
+      console.log('Sample domain client fields:', allDomains.slice(0,5).map(d => ({domain:d.domain, client:d.client})));
+
+    } else {
+      domains = allDomains.filter(d => {
+        const cid = String(d.client?.id || d.client || '');
+        return cfg.clientIds.includes(cid);
+      });
+      console.log(`${cfg.label} domains:`, domains.length, 'of', allDomains.length);
+      console.log('Sample client fields:', allDomains.slice(0,3).map(d=>({domain:d.domain,client:d.client})));
     }
-    // Apply saved mappings
+
+    // Apply any saved custom client mappings
+    const knownClientMap = JSON.parse(localStorage.getItem('ar_client_map')||'{}');
     Object.entries(knownClientMap).forEach(([cid, report]) => {
       if(report !== 'main' && REPORT_CONFIGS[report] && !REPORT_CONFIGS[report].clientIds.includes(cid)) {
         REPORT_CONFIGS[report].clientIds.push(cid);
         if(!allReportClientIds.includes(cid)) allReportClientIds.push(cid);
       }
     });
-
-    if(cfg.clientIds === null) {
-      domains = allDomains.filter(d => {
-        const cid = String(d.client?.id || d.client || '');
-        return !allReportClientIds.includes(cid);
-      });
-    } else {
-      domains = allDomains.filter(d => {
-        const cid = String(d.client?.id || d.client || '');
-        return cfg.clientIds.includes(cid);
-      });
-    }
 
     setReportStatus(`Found ${domains.length} domains. Fetching keyword rankings...`, '');
 
