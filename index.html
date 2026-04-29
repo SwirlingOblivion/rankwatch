@@ -1647,18 +1647,26 @@ const LEVR_HISTORICAL_SNAPS = [
 async function seedHistoricalData() {
   const seeded = localStorage.getItem('ar_seeded_v2');
   if(seeded) return;
+
   const seeds = {
     main: MAIN_HISTORICAL_SNAPS,
     riot: RIOT_HISTORICAL_SNAPS,
     rift: RIFT_HISTORICAL_SNAPS,
     levr: LEVR_HISTORICAL_SNAPS,
   };
-  for(const [name, snaps] of Object.entries(seeds)) {
+
+  for(const [name, historicalSnaps] of Object.entries(seeds)) {
     const existing = await dbGet(`snaps_${name}`);
-    if(!existing?.snaps?.length) {
-      await dbSet(`snaps_${name}`, { snaps });
-    }
+    const existingSnaps = existing?.snaps || [];
+
+    // Merge: keep all historical snaps, then add any existing snaps that are newer
+    const existingDates = new Set(historicalSnaps.map(s => s.week));
+    const newSnaps = existingSnaps.filter(s => !existingDates.has(s.week));
+    const merged = [...historicalSnaps, ...newSnaps].sort((a,b) => a.week.localeCompare(b.week));
+
+    await dbSet(`snaps_${name}`, { snaps: merged });
   }
+
   localStorage.setItem('ar_seeded_v2','1');
 }
 
