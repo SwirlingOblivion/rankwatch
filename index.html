@@ -1563,19 +1563,128 @@ function populateReportFilters(status, raw) {
   });
 }
 
+// ─── HISTORICAL DATA SEED (Main report CSV data) ─────────────
+const MAIN_HISTORICAL_SNAPS = [
+  {week:'2025-10-17',total:394,top3:81,top10:22,top100:83,norank:208,pct3:'20.56%',pct10:'5.58%',pct100:'21.07%',pctNorank:'52.79%',pct10cum:'26.14%',pct100cum:'47.21%'},
+  {week:'2025-10-24',total:400,top3:74,top10:30,top100:72,norank:224,pct3:'18.50%',pct10:'7.50%',pct100:'18.00%',pctNorank:'56.00%',pct10cum:'26.00%',pct100cum:'44.00%'},
+  {week:'2025-11-02',total:415,top3:70,top10:29,top100:68,norank:248,pct3:'16.87%',pct10:'6.99%',pct100:'16.39%',pctNorank:'59.76%',pct10cum:'23.86%',pct100cum:'40.24%'},
+  {week:'2025-11-07',total:439,top3:70,top10:39,top100:59,norank:271,pct3:'15.95%',pct10:'8.88%',pct100:'13.44%',pctNorank:'61.73%',pct10cum:'24.83%',pct100cum:'38.27%'},
+  {week:'2025-11-11',total:445,top3:75,top10:38,top100:67,norank:265,pct3:'16.85%',pct10:'8.54%',pct100:'15.06%',pctNorank:'59.55%',pct10cum:'25.39%',pct100cum:'40.45%'},
+  {week:'2025-11-14',total:460,top3:87,top10:44,top100:82,norank:247,pct3:'18.91%',pct10:'9.57%',pct100:'17.83%',pctNorank:'53.70%',pct10cum:'28.48%',pct100cum:'46.30%'},
+  {week:'2025-11-20',total:475,top3:95,top10:46,top100:95,norank:239,pct3:'20.00%',pct10:'9.68%',pct100:'20.00%',pctNorank:'50.32%',pct10cum:'29.68%',pct100cum:'49.68%'},
+  {week:'2025-11-28',total:494,top3:96,top10:51,top100:90,norank:257,pct3:'19.43%',pct10:'10.32%',pct100:'18.22%',pctNorank:'52.02%',pct10cum:'29.76%',pct100cum:'47.98%'},
+  {week:'2025-12-05',total:504,top3:110,top10:49,top100:93,norank:252,pct3:'21.83%',pct10:'9.72%',pct100:'18.45%',pctNorank:'50.00%',pct10cum:'31.55%',pct100cum:'50.00%'},
+  {week:'2025-12-13',total:524,top3:106,top10:48,top100:101,norank:269,pct3:'20.23%',pct10:'9.16%',pct100:'19.27%',pctNorank:'51.34%',pct10cum:'29.39%',pct100cum:'48.66%'},
+  {week:'2025-12-19',total:568,top3:102,top10:53,top100:124,norank:289,pct3:'17.96%',pct10:'9.33%',pct100:'21.83%',pctNorank:'50.88%',pct10cum:'27.29%',pct100cum:'49.12%'},
+  {week:'2025-12-23',total:563,top3:106,top10:53,top100:127,norank:277,pct3:'18.83%',pct10:'9.41%',pct100:'22.56%',pctNorank:'49.20%',pct10cum:'28.24%',pct100cum:'50.80%'},
+  {week:'2026-01-09',total:625,top3:125,top10:60,top100:151,norank:289,pct3:'20.00%',pct10:'9.60%',pct100:'24.16%',pctNorank:'46.24%',pct10cum:'29.60%',pct100cum:'53.76%'},
+  {week:'2026-01-16',total:633,top3:122,top10:62,top100:162,norank:287,pct3:'19.27%',pct10:'9.79%',pct100:'25.59%',pctNorank:'45.34%',pct10cum:'29.07%',pct100cum:'54.66%'},
+  {week:'2026-01-23',total:658,top3:132,top10:59,top100:171,norank:296,pct3:'20.06%',pct10:'8.97%',pct100:'25.99%',pctNorank:'44.98%',pct10cum:'29.03%',pct100cum:'55.02%'},
+  {week:'2026-01-30',total:673,top3:125,top10:77,top100:168,norank:303,pct3:'18.57%',pct10:'11.44%',pct100:'24.96%',pctNorank:'45.02%',pct10cum:'30.01%',pct100cum:'54.98%'},
+  {week:'2026-02-06',total:708,top3:134,top10:72,top100:178,norank:324,pct3:'18.93%',pct10:'10.17%',pct100:'25.14%',pctNorank:'45.76%',pct10cum:'29.10%',pct100cum:'54.24%'},
+  {week:'2026-02-13',total:726,top3:142,top10:82,top100:181,norank:321,pct3:'19.56%',pct10:'11.29%',pct100:'24.93%',pctNorank:'44.21%',pct10cum:'30.85%',pct100cum:'55.79%'},
+  {week:'2026-02-20',total:737,top3:154,top10:84,top100:170,norank:329,pct3:'20.90%',pct10:'11.40%',pct100:'23.07%',pctNorank:'44.64%',pct10cum:'32.29%',pct100cum:'55.36%'},
+  {week:'2026-02-27',total:747,top3:159,top10:82,top100:175,norank:331,pct3:'21.29%',pct10:'10.98%',pct100:'23.43%',pctNorank:'44.31%',pct10cum:'32.26%',pct100cum:'55.69%'},
+  {week:'2026-03-09',total:750,top3:158,top10:99,top100:170,norank:323,pct3:'21.07%',pct10:'13.20%',pct100:'22.67%',pctNorank:'43.07%',pct10cum:'34.27%',pct100cum:'56.93%'},
+  {week:'2026-03-13',total:753,top3:160,top10:97,top100:169,norank:327,pct3:'21.25%',pct10:'12.88%',pct100:'22.44%',pctNorank:'43.43%',pct10cum:'34.13%',pct100cum:'56.57%'},
+  {week:'2026-03-20',total:773,top3:166,top10:98,top100:170,norank:339,pct3:'21.47%',pct10:'12.68%',pct100:'21.99%',pctNorank:'43.86%',pct10cum:'34.15%',pct100cum:'56.14%'},
+  {week:'2026-03-25',total:781,top3:152,top10:99,top100:128,norank:402,pct3:'19.46%',pct10:'12.68%',pct100:'16.39%',pctNorank:'51.47%',pct10cum:'32.14%',pct100cum:'48.53%'},
+  {week:'2026-03-27',total:785,top3:153,top10:105,top100:145,norank:382,pct3:'19.49%',pct10:'13.38%',pct100:'18.47%',pctNorank:'48.66%',pct10cum:'32.87%',pct100cum:'51.34%'},
+  {week:'2026-03-30',total:786,top3:152,top10:98,top100:138,norank:398,pct3:'19.34%',pct10:'12.47%',pct100:'17.56%',pctNorank:'50.64%',pct10cum:'31.81%',pct100cum:'49.36%'},
+  {week:'2026-04-02',total:806,top3:155,top10:103,top100:132,norank:416,pct3:'19.23%',pct10:'12.78%',pct100:'16.38%',pctNorank:'51.61%',pct10cum:'32.01%',pct100cum:'48.39%'},
+  {week:'2026-04-08',total:819,top3:156,top10:92,top100:134,norank:437,pct3:'19.05%',pct10:'11.23%',pct100:'16.36%',pctNorank:'53.36%',pct10cum:'30.28%',pct100cum:'46.64%'},
+  {week:'2026-04-10',total:826,top3:160,top10:93,top100:145,norank:428,pct3:'19.37%',pct10:'11.26%',pct100:'17.55%',pctNorank:'51.82%',pct10cum:'30.63%',pct100cum:'48.18%'},
+  {week:'2026-04-17',total:846,top3:134,top10:109,top100:133,norank:470,pct3:'15.84%',pct10:'12.88%',pct100:'15.72%',pctNorank:'55.56%',pct10cum:'28.72%',pct100cum:'44.44%'},
+  {week:'2026-04-23',total:859,top3:142,top10:98,top100:127,norank:492,pct3:'16.53%',pct10:'11.41%',pct100:'14.78%',pctNorank:'57.28%',pct10cum:'27.94%',pct100cum:'42.72%'},
+];
+
+const RIOT_HISTORICAL_SNAPS = [
+  {week:'2026-02-13',total:6,top3:0,top10:0,top100:0,norank:6,pct3:'0.00%',pct10:'0.00%',pct100:'0.00%',pctNorank:'100.00%',pct10cum:'0.00%',pct100cum:'0.00%'},
+  {week:'2026-02-20',total:21,top3:1,top10:0,top100:0,norank:20,pct3:'4.76%',pct10:'0.00%',pct100:'0.00%',pctNorank:'95.24%',pct10cum:'4.76%',pct100cum:'4.76%'},
+  {week:'2026-02-27',total:33,top3:2,top10:0,top100:0,norank:31,pct3:'6.06%',pct10:'0.00%',pct100:'0.00%',pctNorank:'93.94%',pct10cum:'6.06%',pct100cum:'6.06%'},
+  {week:'2026-03-09',total:56,top3:5,top10:0,top100:4,norank:47,pct3:'8.93%',pct10:'0.00%',pct100:'7.14%',pctNorank:'83.93%',pct10cum:'8.93%',pct100cum:'16.07%'},
+  {week:'2026-03-13',total:88,top3:2,top10:1,top100:5,norank:80,pct3:'2.27%',pct10:'1.14%',pct100:'5.68%',pctNorank:'90.91%',pct10cum:'3.41%',pct100cum:'9.09%'},
+  {week:'2026-03-20',total:118,top3:5,top10:1,top100:6,norank:106,pct3:'4.24%',pct10:'0.85%',pct100:'5.08%',pctNorank:'89.83%',pct10cum:'5.08%',pct100cum:'10.17%'},
+  {week:'2026-03-25',total:140,top3:6,top10:2,top100:10,norank:122,pct3:'4.29%',pct10:'1.43%',pct100:'7.14%',pctNorank:'87.14%',pct10cum:'5.71%',pct100cum:'12.86%'},
+  {week:'2026-03-27',total:160,top3:8,top10:4,top100:14,norank:134,pct3:'5.00%',pct10:'2.50%',pct100:'8.75%',pctNorank:'83.75%',pct10cum:'7.50%',pct100cum:'16.25%'},
+  {week:'2026-03-30',total:160,top3:6,top10:8,top100:11,norank:135,pct3:'3.75%',pct10:'5.00%',pct100:'6.88%',pctNorank:'84.38%',pct10cum:'8.75%',pct100cum:'15.63%'},
+  {week:'2026-04-02',total:195,top3:9,top10:4,top100:12,norank:170,pct3:'4.62%',pct10:'2.05%',pct100:'6.15%',pctNorank:'87.18%',pct10cum:'6.67%',pct100cum:'12.82%'},
+  {week:'2026-04-08',total:227,top3:10,top10:8,top100:10,norank:199,pct3:'4.41%',pct10:'3.52%',pct100:'4.41%',pctNorank:'87.67%',pct10cum:'7.93%',pct100cum:'12.33%'},
+  {week:'2026-04-10',total:246,top3:10,top10:7,top100:15,norank:214,pct3:'4.07%',pct10:'2.85%',pct100:'6.10%',pctNorank:'86.99%',pct10cum:'6.91%',pct100cum:'13.01%'},
+  {week:'2026-04-17',total:290,top3:11,top10:8,top100:16,norank:255,pct3:'3.79%',pct10:'2.76%',pct100:'5.52%',pctNorank:'87.93%',pct10cum:'6.55%',pct100cum:'12.07%'},
+  {week:'2026-04-23',total:323,top3:10,top10:14,top100:28,norank:271,pct3:'3.10%',pct10:'4.33%',pct100:'8.67%',pctNorank:'83.90%',pct10cum:'7.43%',pct100cum:'16.10%'},
+];
+
+const RIFT_HISTORICAL_SNAPS = [
+  {week:'2026-02-13',total:1,top3:0,top10:0,top100:0,norank:1,pct3:'0.00%',pct10:'0.00%',pct100:'0.00%',pctNorank:'100.00%',pct10cum:'0.00%',pct100cum:'0.00%'},
+  {week:'2026-02-20',total:1,top3:0,top10:0,top100:0,norank:1,pct3:'0.00%',pct10:'0.00%',pct100:'0.00%',pctNorank:'100.00%',pct10cum:'0.00%',pct100cum:'0.00%'},
+  {week:'2026-02-27',total:1,top3:0,top10:0,top100:0,norank:1,pct3:'0.00%',pct10:'0.00%',pct100:'0.00%',pctNorank:'100.00%',pct10cum:'0.00%',pct100cum:'0.00%'},
+  {week:'2026-03-09',total:1,top3:0,top10:0,top100:0,norank:1,pct3:'0.00%',pct10:'0.00%',pct100:'0.00%',pctNorank:'100.00%',pct10cum:'0.00%',pct100cum:'0.00%'},
+  {week:'2026-03-13',total:16,top3:2,top10:1,top100:0,norank:13,pct3:'12.50%',pct10:'6.25%',pct100:'0.00%',pctNorank:'81.25%',pct10cum:'18.75%',pct100cum:'18.75%'},
+  {week:'2026-03-20',total:25,top3:2,top10:0,top100:0,norank:23,pct3:'8.00%',pct10:'0.00%',pct100:'0.00%',pctNorank:'92.00%',pct10cum:'8.00%',pct100cum:'8.00%'},
+  {week:'2026-03-25',total:35,top3:0,top10:1,top100:0,norank:34,pct3:'0.00%',pct10:'2.86%',pct100:'0.00%',pctNorank:'97.14%',pct10cum:'2.86%',pct100cum:'2.86%'},
+  {week:'2026-03-27',total:35,top3:1,top10:0,top100:0,norank:34,pct3:'2.86%',pct10:'0.00%',pct100:'0.00%',pctNorank:'97.14%',pct10cum:'2.86%',pct100cum:'2.86%'},
+  {week:'2026-03-30',total:35,top3:1,top10:0,top100:0,norank:34,pct3:'2.86%',pct10:'0.00%',pct100:'0.00%',pctNorank:'97.14%',pct10cum:'2.86%',pct100cum:'2.86%'},
+  {week:'2026-04-02',total:52,top3:0,top10:1,top100:0,norank:51,pct3:'0.00%',pct10:'1.92%',pct100:'0.00%',pctNorank:'98.08%',pct10cum:'1.92%',pct100cum:'1.92%'},
+  {week:'2026-04-08',total:53,top3:1,top10:2,top100:0,norank:50,pct3:'1.89%',pct10:'3.77%',pct100:'0.00%',pctNorank:'94.34%',pct10cum:'5.66%',pct100cum:'5.66%'},
+  {week:'2026-04-10',total:53,top3:0,top10:3,top100:0,norank:50,pct3:'0.00%',pct10:'5.66%',pct100:'0.00%',pctNorank:'94.34%',pct10cum:'5.66%',pct100cum:'5.66%'},
+  {week:'2026-04-17',total:69,top3:3,top10:1,top100:0,norank:65,pct3:'4.35%',pct10:'1.45%',pct100:'0.00%',pctNorank:'94.20%',pct10cum:'5.80%',pct100cum:'5.80%'},
+  {week:'2026-04-23',total:82,top3:5,top10:1,top100:1,norank:75,pct3:'6.10%',pct10:'1.22%',pct100:'1.22%',pctNorank:'91.46%',pct10cum:'7.32%',pct100cum:'8.54%'},
+];
+
+const LEVR_HISTORICAL_SNAPS = [
+  {week:'2026-03-20',total:2,top3:0,top10:0,top100:0,norank:2,pct3:'0.00%',pct10:'0.00%',pct100:'0.00%',pctNorank:'100.00%',pct10cum:'0.00%',pct100cum:'0.00%'},
+  {week:'2026-03-25',total:2,top3:0,top10:0,top100:0,norank:2,pct3:'0.00%',pct10:'0.00%',pct100:'0.00%',pctNorank:'100.00%',pct10cum:'0.00%',pct100cum:'0.00%'},
+  {week:'2026-03-27',total:2,top3:0,top10:0,top100:0,norank:2,pct3:'0.00%',pct10:'0.00%',pct100:'0.00%',pctNorank:'100.00%',pct10cum:'0.00%',pct100cum:'0.00%'},
+  {week:'2026-03-30',total:2,top3:0,top10:0,top100:0,norank:2,pct3:'0.00%',pct10:'0.00%',pct100:'0.00%',pctNorank:'100.00%',pct10cum:'0.00%',pct100cum:'0.00%'},
+  {week:'2026-04-02',total:2,top3:0,top10:0,top100:0,norank:2,pct3:'0.00%',pct10:'0.00%',pct100:'0.00%',pctNorank:'100.00%',pct10cum:'0.00%',pct100cum:'0.00%'},
+  {week:'2026-04-08',total:2,top3:0,top10:0,top100:0,norank:2,pct3:'0.00%',pct10:'0.00%',pct100:'0.00%',pctNorank:'100.00%',pct10cum:'0.00%',pct100cum:'0.00%'},
+  {week:'2026-04-10',total:9,top3:0,top10:0,top100:0,norank:9,pct3:'0.00%',pct10:'0.00%',pct100:'0.00%',pctNorank:'100.00%',pct10cum:'0.00%',pct100cum:'0.00%'},
+  {week:'2026-04-17',total:28,top3:1,top10:0,top100:1,norank:26,pct3:'3.57%',pct10:'0.00%',pct100:'3.57%',pctNorank:'92.86%',pct10cum:'3.57%',pct100cum:'7.14%'},
+  {week:'2026-04-23',total:28,top3:2,top10:0,top100:0,norank:26,pct3:'7.14%',pct10:'0.00%',pct100:'0.00%',pctNorank:'92.86%',pct10cum:'7.14%',pct100cum:'7.14%'},
+];
+
+async function seedHistoricalData() {
+  const seeded = localStorage.getItem('ar_seeded_v2');
+  if(seeded) return;
+  const seeds = {
+    main: MAIN_HISTORICAL_SNAPS,
+    riot: RIOT_HISTORICAL_SNAPS,
+    rift: RIFT_HISTORICAL_SNAPS,
+    levr: LEVR_HISTORICAL_SNAPS,
+  };
+  for(const [name, snaps] of Object.entries(seeds)) {
+    const existing = await dbGet(`snaps_${name}`);
+    if(!existing?.snaps?.length) {
+      await dbSet(`snaps_${name}`, { snaps });
+    }
+  }
+  localStorage.setItem('ar_seeded_v2','1');
+}
+
 // Load cached report data on tab switch
 async function loadCachedReport(name) {
+  // Seed all historical data on first load
+  await seedHistoricalData();
+
   if(reportData[name]) return;
   const cached = await dbGet(`report_${name}`);
+  const histKey = `snaps_${name}`;
+  const stored = await dbGet(histKey);
+  const historicalSnaps = stored?.snaps || [];
+
   if(cached?.data) {
-    // Merge in historical snapshots
-    const histKey = `snaps_${name}`;
-    const stored = await dbGet(histKey);
-    const snapshots = stored?.snaps || cached.data.snapshots || [];
-    reportData[name] = { ...cached.data, snapshots };
+    reportData[name] = { ...cached.data, snapshots: historicalSnaps };
     if(activeReport === name) {
       renderReport(reportData[name]);
-      setReportStatus(`Cached data · ${snapshots.length} week(s) of history · click Extract to refresh`, 'ok');
+      setReportStatus(`Cached data · ${historicalSnaps.length} week(s) of history · click Extract to refresh`, 'ok');
+    }
+  } else if(historicalSnaps.length > 0) {
+    // Show historical charts even before first extract
+    reportData[name] = { rawRows:[], currentStatus:[], marketShare:[], snapshots: historicalSnaps };
+    if(activeReport === name) {
+      renderSnapshots(historicalSnaps);
+      setReportStatus(`${historicalSnaps.length} weeks of historical data · click Extract to add current data`, 'ok');
     }
   }
 }
@@ -1610,122 +1719,194 @@ function loadChartJS() {
 async function exportReportPDF() {
   const data = reportData[activeReport];
   if(!data) { alert('Please extract report data first.'); return; }
-
   const btn = document.getElementById('pdf-btn');
   btn.disabled = true; btn.textContent = '⏳ Generating...';
 
-  // Load html2canvas + jsPDF if not loaded
-  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
   await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
 
   const cfg = REPORT_CONFIGS[activeReport];
-  const latest = data.snapshots[data.snapshots.length-1];
+  const snaps = data.snapshots || [];
+  const latest = snaps[snaps.length-1];
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
-  const W = 210, M = 15;
+  const W=210, M=15, CW=W-M*2;
   let y = M;
 
-  // ── Header ─────────────────────────────────────────────────
-  doc.setFillColor(10,10,15);
-  doc.rect(0,0,W,40,'F');
-  doc.setTextColor(124,106,255);
-  doc.setFontSize(22); doc.setFont('helvetica','bold');
-  doc.text('The Money Maker', M, 18);
-  doc.setTextColor(200,200,220);
-  doc.setFontSize(12); doc.setFont('helvetica','normal');
-  doc.text(`${cfg.label} Report`, M, 28);
-  doc.setFontSize(9); doc.setTextColor(107,107,138);
-  doc.text(`Generated: ${new Date().toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'})}`, W-M, 28, {align:'right'});
-  y = 50;
+  // Helpers
+  const setH = (size,bold=false,r=30,g=30,b=50) => { doc.setFontSize(size); doc.setFont('helvetica',bold?'bold':'normal'); doc.setTextColor(r,g,b); };
+  const fillRect = (x,fy,w,h,r,g,b) => { doc.setFillColor(r,g,b); doc.rect(x,fy,w,h,'F'); };
+  const checkPage = (needed=20) => { if(y+needed>282){ doc.addPage(); y=M; } };
 
-  // ── Summary stats ──────────────────────────────────────────
-  doc.setFontSize(13); doc.setFont('helvetica','bold'); doc.setTextColor(232,232,240);
-  doc.text('Current Snapshot', M, y); y += 8;
+  // ── HEADER ──────────────────────────────────────────────────
+  fillRect(0,0,W,36,248,246,255);
+  doc.setDrawColor(124,106,255); doc.setLineWidth(0.5);
+  doc.line(0,36,W,36);
+  // Accent bar
+  doc.setFillColor(124,106,255); doc.rect(0,0,4,36,'F');
+  setH(20,true,60,40,120);
+  doc.text('The Money Maker', M+6, 15);
+  setH(11,false,100,80,160);
+  doc.text(`${cfg.label} Report`, M+6, 24);
+  setH(9,false,150,140,170);
+  doc.text(`Generated: ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}`, W-M, 24, {align:'right'});
+  if(latest) {
+    doc.text(`Latest snapshot: ${latest.week}`, W-M, 31, {align:'right'});
+  }
+  y = 46;
 
-  const stats = [
-    { label:'Total Sites', value: latest.total, color:[232,232,240] },
-    { label:'Top 3', value: `${latest.top3} (${latest.pct3})`, color:[255,200,74] },
-    { label:'Top 10', value: `${latest.top10} (${latest.pct10})`, color:[124,106,255] },
-    { label:'Top 100', value: `${latest.top100} (${latest.pct100})`, color:[61,159,255] },
-    { label:'No Ranking', value: `${latest.norank} (${latest.pctNorank})`, color:[107,107,138] },
-    { label:'Top 10 Cumulative', value: latest.pct10cum, color:[61,255,160] },
-  ];
+  // ── SNAPSHOT STATS ──────────────────────────────────────────
+  setH(12,true,40,40,60);
+  doc.text('Current Snapshot', M, y); y += 6;
 
-  const colW = (W - M*2) / 3;
-  stats.forEach((s, i) => {
-    const col = i % 3, row = Math.floor(i/3);
-    const x = M + col*colW, sy = y + row*18;
-    doc.setFillColor(26,26,36);
-    doc.roundedRect(x, sy-6, colW-4, 16, 2, 2, 'F');
-    doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(107,107,138);
-    doc.text(s.label, x+4, sy+1);
-    doc.setFontSize(13); doc.setFont('helvetica','bold'); doc.setTextColor(...s.color);
-    doc.text(String(s.value), x+4, sy+9);
+  if(latest) {
+    const statBoxes = [
+      {label:'Total Sites', value:latest.total, r:240,g:240,b:255, tr:60,tg:60,tb:100},
+      {label:'Top 3', value:`${latest.top3}  (${latest.pct3})`, r:255,g:248,b:220, tr:160,tg:100,tb:0},
+      {label:'Top 10', value:`${latest.top10}  (${latest.pct10})`, r:240,g:236,b:255, tr:80,tg:60,tb:180},
+      {label:'Top 100', value:`${latest.top100}  (${latest.pct100})`, r:230,g:244,b:255, tr:20,tg:100,tb:180},
+      {label:'No Ranking', value:`${latest.norank}  (${latest.pctNorank})`, r:245,g:245,b:248, tr:100,tg:100,tb:120},
+      {label:'Top 10 Cumulative', value:latest.pct10cum, r:230,g:255,b:242, tr:0,tg:120,tb:80},
+    ];
+    const bw=(CW-10)/3, bh=18;
+    statBoxes.forEach((s,i)=>{
+      const col=i%3, row=Math.floor(i/3);
+      const bx=M+col*(bw+5), by=y+row*(bh+4);
+      fillRect(bx,by,bw,bh,s.r,s.g,s.b);
+      doc.setDrawColor(200,200,220); doc.setLineWidth(0.3);
+      doc.rect(bx,by,bw,bh,'S');
+      setH(8,false,120,120,140);
+      doc.text(s.label, bx+4, by+6);
+      setH(11,true,s.tr,s.tg,s.tb);
+      doc.text(String(s.value), bx+4, by+14);
+    });
+    y += 2*(bh+4)+8;
+  }
+
+  // ── TREND CHART (drawn as lines using jsPDF) ────────────────
+  checkPage(70);
+  setH(12,true,40,40,60);
+  doc.text('Ranking Distribution Over Time', M, y); y += 5;
+
+  if(snaps.length > 1) {
+    const chartH=55, chartW=CW;
+    const parseP = s => parseFloat(s)||0;
+    const datasets = [
+      { key:'pct3',    label:'% Top 3',    r:200,g:150,b:0 },
+      { key:'pct10',   label:'% Top 10',   r:100,g:80,b:200 },
+      { key:'pct100',  label:'% Top 100',  r:30,g:120,b:200 },
+      { key:'pct10cum',label:'Top 10 Cum.',r:0,g:160,b:100 },
+    ];
+
+    // Background
+    fillRect(M,y,chartW,chartH,248,248,255);
+    doc.setDrawColor(200,200,220); doc.setLineWidth(0.2);
+    doc.rect(M,y,chartW,chartH,'S');
+
+    // Grid lines
+    const gridLines=[0,25,50,75,100];
+    gridLines.forEach(gl => {
+      const gy = y+chartH - (gl/100)*chartH;
+      doc.setDrawColor(220,220,230); doc.setLineWidth(0.15);
+      doc.line(M,gy,M+chartW,gy);
+      setH(6,false,160,160,180);
+      doc.text(gl+'%', M-2, gy+1, {align:'right'});
+    });
+
+    // Plot lines
+    const n = snaps.length;
+    datasets.forEach(ds => {
+      const vals = snaps.map(s => parseP(s[ds.key]));
+      doc.setDrawColor(ds.r,ds.g,ds.b); doc.setLineWidth(0.6);
+      for(let i=1;i<n;i++) {
+        const x1=M+(i-1)/(n-1)*chartW, y1=y+chartH-(vals[i-1]/100)*chartH;
+        const x2=M+i/(n-1)*chartW,     y2=y+chartH-(vals[i]/100)*chartH;
+        doc.line(x1,y1,x2,y2);
+      }
+    });
+
+    // X-axis labels (every 4th week)
+    snaps.forEach((s,i) => {
+      if(i % Math.max(1,Math.floor(n/8)) !== 0 && i !== n-1) return;
+      const lx = M+i/(n-1)*chartW;
+      setH(5.5,false,140,140,160);
+      doc.text(s.week.substring(5), lx, y+chartH+5, {align:'center'});
+    });
+
+    // Legend
+    let lx=M; y+=chartH+10;
+    datasets.forEach(ds => {
+      doc.setFillColor(ds.r,ds.g,ds.b); doc.rect(lx,y-3,8,3,'F');
+      setH(7,false,80,80,100);
+      doc.text(ds.label, lx+10, y);
+      lx+=45;
+    });
+    y+=8;
+  }
+
+  // ── MARKET SHARE ────────────────────────────────────────────
+  checkPage(20);
+  setH(12,true,40,40,60);
+  doc.text('Market Share', M, y); y+=6;
+
+  // Table header
+  fillRect(M,y,CW,8,230,228,255);
+  doc.setDrawColor(180,175,220); doc.setLineWidth(0.2); doc.rect(M,y,CW,8,'S');
+  setH(7.5,true,60,50,150);
+  const mc=[M,M+32,M+62,M+90,M+112,M+140,M+162,M+184];
+  ['Market','Total','Top 3','% Top 3','Top 10','Top 100','No Rank','% No R'].forEach((h,i)=>doc.text(h,mc[i]+2,y+5.5));
+  y+=9;
+
+  const mkts = (data.marketShare||[]).slice(0,30);
+  mkts.forEach((m,idx)=>{
+    checkPage(8);
+    if(idx%2===0) fillRect(M,y,CW,7,245,245,250);
+    doc.setDrawColor(220,220,225); doc.setLineWidth(0.1); doc.rect(M,y,CW,7,'S');
+    setH(7.5,false,50,50,70);
+    doc.text(m.market,mc[0]+2,y+5);
+    doc.text(String(m.total),mc[1]+2,y+5);
+    setH(7.5,true,160,100,0); doc.text(String(m.top3),mc[2]+2,y+5);
+    setH(7.5,false,160,100,0); doc.text(pct(m.top3,m.total),mc[3]+2,y+5);
+    setH(7.5,false,80,60,180); doc.text(String(m.top10),mc[4]+2,y+5);
+    setH(7.5,false,30,110,180); doc.text(String(m.top100),mc[5]+2,y+5);
+    setH(7.5,false,120,120,140); doc.text(String(m.norank),mc[6]+2,y+5);
+    doc.text(pct(m.norank,m.total),mc[7]+2,y+5);
+    y+=7;
   });
-  y += 46;
+  y+=8;
 
-  // ── Market Share table ─────────────────────────────────────
-  doc.setFontSize(13); doc.setFont('helvetica','bold'); doc.setTextColor(232,232,240);
-  doc.text('Market Share', M, y); y += 7;
+  // ── TOP SITES ───────────────────────────────────────────────
+  checkPage(20);
+  setH(12,true,40,40,60);
+  doc.text('Top Performing Sites (Top 3)', M, y); y+=6;
 
-  // Header row
-  doc.setFillColor(26,26,36);
-  doc.rect(M, y, W-M*2, 7, 'F');
-  doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(107,107,138);
-  const mCols = [M, M+35, M+65, M+95, M+120, M+145, M+170];
-  const mHdrs = ['Market','Total','Top 3','% Top 3','Top 10','Top 100','No Rank'];
-  mHdrs.forEach((h,i) => doc.text(h, mCols[i]+2, y+5));
-  y += 8;
+  fillRect(M,y,CW,8,230,228,255);
+  doc.setDrawColor(180,175,220); doc.rect(M,y,CW,8,'S');
+  setH(7.5,true,60,50,150);
+  doc.text('Domain',M+2,y+5.5); doc.text('Market',M+110,y+5.5); doc.text('Position',M+150,y+5.5);
+  y+=9;
 
-  // Data rows
-  doc.setFont('helvetica','normal');
-  const topMarkets = data.marketShare.slice(0, 25);
-  topMarkets.forEach((m, idx) => {
-    if(y > 270) { doc.addPage(); y = M; }
-    if(idx%2===0) { doc.setFillColor(17,17,24); doc.rect(M, y-1, W-M*2, 7, 'F'); }
-    doc.setTextColor(232,232,240); doc.setFontSize(8);
-    doc.text(m.market, mCols[0]+2, y+4);
-    doc.text(String(m.total), mCols[1]+2, y+4);
-    doc.setTextColor(255,200,74); doc.text(String(m.top3), mCols[2]+2, y+4);
-    doc.setTextColor(107,107,138); doc.text(pct(m.top3,m.total), mCols[3]+2, y+4);
-    doc.setTextColor(124,106,255); doc.text(String(m.top10), mCols[4]+2, y+4);
-    doc.setTextColor(61,159,255); doc.text(String(m.top100), mCols[5]+2, y+4);
-    doc.setTextColor(107,107,138); doc.text(String(m.norank), mCols[6]+2, y+4);
-    y += 7;
-  });
-  y += 8;
-
-  // ── Current Status sample ──────────────────────────────────
-  if(y > 220) { doc.addPage(); y = M; }
-  doc.setFontSize(13); doc.setFont('helvetica','bold'); doc.setTextColor(232,232,240);
-  doc.text('Top Performing Sites (Top 3)', M, y); y += 7;
-
-  const top3sites = data.currentStatus.filter(s=>s.bucket==='Top 3').sort((a,b)=>a.position-b.position).slice(0,20);
-  doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(107,107,138);
-  doc.setFillColor(26,26,36); doc.rect(M, y, W-M*2, 7, 'F');
-  doc.text('Domain', M+2, y+5); doc.text('Market', M+100, y+5); doc.text('Position', M+140, y+5);
-  y += 8;
-  doc.setFont('helvetica','normal');
-  top3sites.forEach((s, idx) => {
-    if(y > 275) { doc.addPage(); y = M; }
-    if(idx%2===0) { doc.setFillColor(17,17,24); doc.rect(M, y-1, W-M*2, 7, 'F'); }
-    doc.setTextColor(232,232,240); doc.setFontSize(8);
-    doc.text(s.domain.substring(0,50), M+2, y+4);
-    doc.setTextColor(107,107,138); doc.text(s.market, M+100, y+4);
-    doc.setTextColor(255,200,74); doc.text('#'+s.position, M+140, y+4);
-    y += 7;
+  (data.currentStatus||[]).filter(s=>s.bucket==='Top 3').sort((a,b)=>a.position-b.position).slice(0,25).forEach((s,idx)=>{
+    checkPage(8);
+    if(idx%2===0) fillRect(M,y,CW,7,245,245,250);
+    doc.setDrawColor(220,220,225); doc.rect(M,y,CW,7,'S');
+    setH(7.5,false,50,50,70); doc.text(s.domain.substring(0,55),M+2,y+5);
+    setH(7.5,false,100,100,130); doc.text(s.market,M+110,y+5);
+    setH(7.5,true,160,100,0); doc.text('#'+s.position,M+150,y+5);
+    y+=7;
   });
 
-  // ── Footer ─────────────────────────────────────────────────
-  const pageCount = doc.internal.getNumberOfPages();
-  for(let i=1; i<=pageCount; i++) {
+  // ── FOOTER ──────────────────────────────────────────────────
+  const pages=doc.internal.getNumberOfPages();
+  for(let i=1;i<=pages;i++){
     doc.setPage(i);
-    doc.setFontSize(8); doc.setTextColor(107,107,138);
-    doc.text(`The Money Maker · ${cfg.label} Report · Page ${i} of ${pageCount}`, W/2, 290, {align:'center'});
+    fillRect(0,288,W,9,248,246,255);
+    doc.setDrawColor(200,195,230); doc.line(0,288,W,288);
+    setH(7.5,false,120,110,160);
+    doc.text(`The Money Maker · ${cfg.label} Report · Page ${i} of ${pages}`,W/2,294,{align:'center'});
   }
 
   doc.save(`money-maker-${activeReport}-${fmt(new Date())}.pdf`);
-  btn.disabled = false; btn.textContent = '📄 Export PDF';
+  btn.disabled=false; btn.textContent='📄 Export PDF';
 }
 
 function loadScript(src) {
