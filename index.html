@@ -491,10 +491,10 @@ let activeReport='main',activeReportSub='snapshots',reportData={},statusPage=1,r
 let chartDist=null,chartCumul=null;
 const PAGE_SIZE=50,RPT_PAGE=50;
 const REPORT_CONFIGS={
-  main:{label:'Main',clientIds:null},
-  riot:{label:'RIOT',clientIds:['80066','79817','80050','80177']},
-  rift:{label:'RIFT',clientIds:['79816']},
-  levr:{label:'LEVR',clientIds:['80048']},
+  main:{label:'Main',groupIds:null},
+  riot:{label:'RIOT',groupIds:['80066','79817','80050','80177']},
+  rift:{label:'RIFT',groupIds:['79816']},
+  levr:{label:'LEVR',groupIds:['80048']},
 };
 
 // UTILS
@@ -533,10 +533,11 @@ async function arFetch(path){
   if(!res.ok)throw new Error(`API ${res.status}: ${res.statusText}`);
   return res.json();
 }
-async function fetchClientDomainIds(clientId){
+async function fetchGroupDomainIds(groupId){
   const ids=new Set();
-  // AccuRanker has a /clients/{id}/domains/ endpoint
-  let next=`/api/v4/clients/${clientId}/domains/?fields=id&page_size=100`;
+  // AccuRanker hierarchy: Workspaces -> Groups -> Domains
+  // Primary endpoint: /api/v4/groups/{id}/domains/
+  let next=`/api/v4/groups/${groupId}/domains/?fields=id&page_size=100`;
   let attempts=0;
   while(next&&attempts<20){
     attempts++;
@@ -546,20 +547,23 @@ async function fetchClientDomainIds(clientId){
       results.forEach(d=>ids.add(d.id));
       next=data.next?data.next.replace('https://app.accuranker.com',''):null;
       if(next)await sleep(200);
+      if(results.length===0)break;
     }catch(e){
-      console.warn(`fetchClientDomainIds(${clientId}):`,e.message);
-      // Try alternative: /api/v4/domains/?client_id=X
-      try{
-        let alt=`/api/v4/domains/?fields=id&client=${clientId}&page_size=100`;
-        const data=await arFetch(alt);
-        const results=data.results||(Array.isArray(data)?data:[]);
-        results.forEach(d=>ids.add(d.id));
-        console.log(`Alt fetch for client ${clientId}:`,results.length,'domains');
-      }catch(e2){console.warn('Alt also failed:',e2.message);}
+      console.warn(`fetchGroupDomainIds(${groupId}) primary failed:`,e.message);
       break;
     }
   }
-  console.log(`Client ${clientId}: ${ids.size} domain IDs`);
+  if(ids.size===0){
+    // Fallback: filter domains endpoint by group_id param
+    try{
+      let alt=`/api/v4/domains/?fields=id&group_id=${groupId}&page_size=500`;
+      const data=await arFetch(alt);
+      const results=data.results||(Array.isArray(data)?data:[]);
+      results.forEach(d=>ids.add(d.id));
+      console.log(`Fallback group_id filter for ${groupId}:`,results.length,'domains');
+    }catch(e2){console.warn('Fallback also failed:',e2.message);}
+  }
+  console.log(`Group ${groupId}: ${ids.size} domain IDs`);
   return ids;
 }
 
@@ -902,16 +906,16 @@ async function extractReport(){
     let allDomains=[],nextUrl='/api/v4/domains/?fields=id,domain,display_name&page_size=100';
     while(nextUrl){const data=await arFetch(nextUrl);allDomains=allDomains.concat(data.results||data);nextUrl=data.next?data.next.replace('https://app.accuranker.com',''):null;if(nextUrl)await sleep(300);}
     let domains=[];
-    if(cfg.clientIds===null){
+    if(cfg.groupIds===null){
       const namedIds=new Set();
-      const allClientIds=['80066','79817','80050','80177','79816','80048'];
+      const allGroupIds=['80066','79817','80050','80177','79816','80048'];
       setReportStatus('Identifying named report domains...');
-      for(const cid of allClientIds){const ids=await fetchClientDomainIds(cid);ids.forEach(id=>namedIds.add(id));await sleep(200);}
+      for(const gid of allGroupIds){const ids=await fetchGroupDomainIds(gid);ids.forEach(id=>namedIds.add(id));await sleep(200);}
       domains=allDomains.filter(d=>!namedIds.has(d.id));
       console.log(`Main: ${domains.length} domains (excluded ${namedIds.size})`);
     }else{
       const reportIds=new Set();
-      for(const cid of cfg.clientIds){const ids=await fetchClientDomainIds(cid);ids.forEach(id=>reportIds.add(id));await sleep(200);}
+      for(const gid of cfg.groupIds){const ids=await fetchGroupDomainIds(gid);ids.forEach(id=>reportIds.add(id));await sleep(200);}
       domains=allDomains.filter(d=>reportIds.has(d.id));
       console.log(`${cfg.label}: ${domains.length} domains`);
     }
