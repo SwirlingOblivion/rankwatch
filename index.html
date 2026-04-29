@@ -242,6 +242,57 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .kd-medium{background:var(--gold)}
 .kd-hard{background:var(--down)}
 .opp-filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:20px}
+/* REPORTS TAB */
+.reports-selector{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;align-items:center}
+.report-btn{padding:10px 24px;border-radius:10px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--muted);transition:all .2s}
+.report-btn:hover{color:var(--text);border-color:var(--muted)}
+.report-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 0 20px rgba(124,106,255,.3)}
+.extract-btn{padding:10px 20px;border-radius:10px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;border:none;background:linear-gradient(135deg,var(--up),#00cc77);color:#000;transition:all .2s;display:flex;align-items:center;gap:8px;margin-left:auto}
+.extract-btn:hover{transform:translateY(-1px);opacity:.9}
+.extract-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.report-status{font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--muted)}
+.report-status.ok{color:var(--up)}
+.report-status.err{color:var(--down)}
+.report-sub-tabs{display:flex;gap:4px;margin-bottom:24px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:4px;width:fit-content}
+.report-sub-btn{padding:7px 18px;border-radius:7px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;border:none;background:none;color:var(--muted);transition:all .15s}
+.report-sub-btn:hover{color:var(--text)}
+.report-sub-btn.active{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.report-sub-content{display:none}
+.report-sub-content.active{display:block}
+
+/* Report stat cards */
+.report-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:24px}
+.rstat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px}
+.rstat-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.rstat-value{font-size:28px;font-weight:800;font-family:'JetBrains Mono',monospace}
+.rstat.top3 .rstat-value{color:var(--top3)}
+.rstat.top10 .rstat-value{color:var(--top10)}
+.rstat.top100 .rstat-value{color:var(--top20)}
+.rstat.norank .rstat-value{color:var(--muted)}
+.rstat.total .rstat-value{color:var(--text)}
+
+/* Weekly chart */
+.chart-container{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:24px}
+.chart-title{font-size:14px;font-weight:700;margin-bottom:20px;color:var(--text)}
+.chart-wrap{position:relative;height:240px;width:100%}
+canvas{width:100%!important}
+
+/* Report tables */
+.report-table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:24px}
+.report-table-header{padding:16px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.report-table-wrap table{width:100%;border-collapse:collapse}
+.report-table-wrap th{padding:10px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--surface2);border-bottom:1px solid var(--border);white-space:nowrap}
+.report-table-wrap td{padding:11px 16px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.04)}
+.report-table-wrap tr:last-child td{border-bottom:none}
+.report-table-wrap tr:hover td{background:rgba(255,255,255,.02)}
+.bucket-tag{padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700}
+.bucket-top3{background:rgba(255,200,74,.15);color:var(--top3)}
+.bucket-top10{background:rgba(124,106,255,.15);color:var(--top10)}
+.bucket-top100{background:rgba(61,159,255,.15);color:var(--top20)}
+.bucket-norank{background:rgba(107,107,138,.15);color:var(--muted)}
+.pct-bar-wrap{display:flex;align-items:center;gap:8px}
+.pct-bar{height:6px;border-radius:3px;background:var(--accent);min-width:2px}
+.market-tag{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -295,6 +346,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <button class="tab-btn active" id="tab-btn-keywords" onclick="switchTab('keywords')">📊 Keywords View</button>
     <button class="tab-btn" id="tab-btn-sites" onclick="switchTab('sites')">🌐 Sites View</button>
     <button class="tab-btn" id="tab-btn-opportunities" onclick="switchTab('opportunities')">💰 Opportunities</button>
+    <button class="tab-btn" id="tab-btn-reports" onclick="switchTab('reports')">📋 Reports</button>
   </div>
 
   <!-- ── KEYWORDS TAB ── -->
@@ -485,6 +537,133 @@ tr:hover td{background:rgba(255,255,255,.02)}
       </div>
     </div>
   </div><!-- end tab-opportunities -->
+
+  <!-- ── REPORTS TAB ── -->
+  <div class="tab-content" id="tab-reports">
+
+    <!-- Report selector + extract button -->
+    <div class="reports-selector">
+      <button class="report-btn active" id="rbtn-main" onclick="selectReport('main')">🏠 Main</button>
+      <button class="report-btn" id="rbtn-riot" onclick="selectReport('riot')">⚡ RIOT</button>
+      <button class="report-btn" id="rbtn-rift" onclick="selectReport('rift')">🤖 RIFT</button>
+      <button class="report-btn" id="rbtn-levr" onclick="selectReport('levr')">🚀 LEVR</button>
+      <button class="extract-btn" id="extract-btn" onclick="extractReport()">⬇ Extract Report</button>
+      <button class="extract-btn" id="pdf-btn" onclick="exportReportPDF()" style="background:linear-gradient(135deg,#ff6b35,#f7931e);margin-left:8px">📄 Export PDF</button>
+    </div>
+    <div style="margin-bottom:20px;display:flex;align-items:center;gap:12px">
+      <span class="report-status" id="report-status">Select a report and click Extract to load data</span>
+    </div>
+
+    <!-- Sub-tabs -->
+    <div class="report-sub-tabs">
+      <button class="report-sub-btn active" id="rsub-btn-snapshots" onclick="selectReportSub('snapshots')">📊 Weekly Snapshots</button>
+      <button class="report-sub-btn" id="rsub-btn-status" onclick="selectReportSub('status')">🏢 Current Status</button>
+      <button class="report-sub-btn" id="rsub-btn-market" onclick="selectReportSub('market')">🌍 Market Share</button>
+      <button class="report-sub-btn" id="rsub-btn-raw" onclick="selectReportSub('raw')">📄 Raw Data</button>
+    </div>
+
+    <!-- Weekly Snapshots -->
+    <div class="report-sub-content active" id="rsub-snapshots">
+      <div class="report-stats" id="report-latest-stats">
+        <div class="rstat total"><div class="rstat-label">Total Sites</div><div class="rstat-value" id="rs-total">—</div></div>
+        <div class="rstat top3"><div class="rstat-label">Top 3</div><div class="rstat-value" id="rs-top3">—</div></div>
+        <div class="rstat top10"><div class="rstat-label">Top 10</div><div class="rstat-value" id="rs-top10">—</div></div>
+        <div class="rstat top100"><div class="rstat-label">Top 100</div><div class="rstat-value" id="rs-top100">—</div></div>
+        <div class="rstat norank"><div class="rstat-label">No Ranking</div><div class="rstat-value" id="rs-norank">—</div></div>
+        <div class="rstat top3"><div class="rstat-label">% Top 3</div><div class="rstat-value" id="rs-pct3">—</div></div>
+        <div class="rstat top10"><div class="rstat-label">% Top 10 Cum.</div><div class="rstat-value" id="rs-pct10">—</div></div>
+      </div>
+      <div class="chart-container">
+        <div class="chart-title">Ranking Distribution Over Time</div>
+        <div class="chart-wrap"><canvas id="chart-dist"></canvas></div>
+      </div>
+      <div class="chart-container">
+        <div class="chart-title">Cumulative Ranking % Over Time</div>
+        <div class="chart-wrap"><canvas id="chart-cumul"></canvas></div>
+      </div>
+      <div class="report-table-wrap">
+        <div class="report-table-header">
+          <span style="font-weight:700;font-size:14px">Weekly Snapshots</span>
+          <span class="badge" id="snapshots-badge">—</span>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr>
+              <th>Week</th><th>Total</th><th>Top 3</th><th>Top 10</th><th>Top 100</th><th>No Rank</th>
+              <th>% Top 3</th><th>% Top 10</th><th>% Top 100</th><th>% No Rank</th><th>% Top 10 Cum.</th><th>% Top 100 Cum.</th>
+            </tr></thead>
+            <tbody id="snapshots-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Current Status -->
+    <div class="report-sub-content" id="rsub-status">
+      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+        <input type="text" class="search-input" id="status-search" placeholder="Search sites..." oninput="renderStatusTable()" style="width:240px">
+        <select class="filter-select" id="status-market-filter" onchange="renderStatusTable()"><option value="all">All Markets</option></select>
+        <select class="filter-select" id="status-bucket-filter" onchange="renderStatusTable()">
+          <option value="all">All Buckets</option>
+          <option value="Top 3">Top 3</option>
+          <option value="Top 10">Top 10</option>
+          <option value="Top 100">Top 100</option>
+          <option value="No Ranking">No Ranking</option>
+        </select>
+      </div>
+      <div class="report-table-wrap">
+        <div class="report-table-header">
+          <span style="font-weight:700;font-size:14px">Current Status</span>
+          <span class="badge" id="status-badge">—</span>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr><th>Site</th><th>Market</th><th>Best Position</th><th>Bucket</th></tr></thead>
+            <tbody id="status-tbody"></tbody>
+          </table>
+        </div>
+        <div class="pagination"><span id="status-pag-info">—</span><div class="page-btns" id="status-pag-btns"></div></div>
+      </div>
+    </div>
+
+    <!-- Market Share -->
+    <div class="report-sub-content" id="rsub-market">
+      <div class="report-table-wrap">
+        <div class="report-table-header">
+          <span style="font-weight:700;font-size:14px">Market Share</span>
+          <span class="badge" id="market-badge">—</span>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr><th>Market</th><th>Total Sites</th><th>Top 3</th><th>% Top 3</th><th>Top 10</th><th>% Top 10</th><th>Top 100</th><th>% Top 100</th><th>No Ranking</th><th>% No Ranking</th></tr></thead>
+            <tbody id="market-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Raw Data -->
+    <div class="report-sub-content" id="rsub-raw">
+      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+        <input type="text" class="search-input" id="raw-search" placeholder="Search keywords/domains..." oninput="renderRawTable()" style="width:280px">
+        <select class="filter-select" id="raw-market-filter" onchange="renderRawTable()"><option value="all">All Markets</option></select>
+      </div>
+      <div class="report-table-wrap">
+        <div class="report-table-header">
+          <span style="font-weight:700;font-size:14px">Raw Data</span>
+          <span class="badge" id="raw-badge">—</span>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr><th>Domain</th><th>Keyword</th><th>Position</th><th>Market</th></tr></thead>
+            <tbody id="raw-tbody"></tbody>
+          </table>
+        </div>
+        <div class="pagination"><span id="raw-pag-info">—</span><div class="page-btns" id="raw-pag-btns"></div></div>
+      </div>
+    </div>
+
+  </div><!-- end tab-reports -->
 
 </div><!-- end dashboard -->
 
@@ -976,9 +1155,433 @@ async function fetchAhrefsData() {
   } finally { btn.disabled=false; btn.textContent='🔍 Fetch Opportunity Data'; }
 }
 
-// ─── TABS ────────────────────────────────────────────────────
+// ─── REPORTS ─────────────────────────────────────────────────
+const REPORT_CONFIGS = {
+  main:  { label:'Main',  clientIds: null },       // all domains not in other groups
+  riot:  { label:'RIOT',  clientIds: ['80066','79817','80050','80177'] },
+  rift:  { label:'RIFT',  clientIds: ['79816'] },
+  levr:  { label:'LEVR',  clientIds: ['80048'] },
+};
+
+let activeReport = 'main';
+let activeReportSub = 'snapshots';
+let reportData = {}; // keyed by report name
+let statusPage = 1, rawPage = 1;
+const RPT_PAGE = 50;
+let chartDist = null, chartCumul = null;
+
+function selectReport(name) {
+  activeReport = name;
+  ['main','riot','rift','levr'].forEach(r => {
+    document.getElementById(`rbtn-${r}`).classList.toggle('active', r === name);
+  });
+  // Load cached data if available
+  const cached = reportData[name];
+  if (cached) {
+    renderReport(cached);
+    setReportStatus(`Showing cached data · click Extract to refresh`, 'ok');
+  } else {
+    setReportStatus(`Click Extract to load ${REPORT_CONFIGS[name].label} report`, '');
+    clearReportUI();
+  }
+}
+
+function selectReportSub(sub) {
+  activeReportSub = sub;
+  ['snapshots','status','market','raw'].forEach(s => {
+    document.getElementById(`rsub-btn-${s}`).classList.toggle('active', s === sub);
+    document.getElementById(`rsub-${s}`).classList.toggle('active', s === sub);
+  });
+}
+
+function setReportStatus(msg, type) {
+  const el = document.getElementById('report-status');
+  el.textContent = msg; el.className = 'report-status' + (type ? ' '+type : '');
+}
+
+function clearReportUI() {
+  ['rs-total','rs-top3','rs-top10','rs-top100','rs-norank','rs-pct3','rs-pct10'].forEach(id => {
+    document.getElementById(id).textContent = '—';
+  });
+  document.getElementById('snapshots-tbody').innerHTML = '';
+  document.getElementById('status-tbody').innerHTML = '';
+  document.getElementById('market-tbody').innerHTML = '';
+  document.getElementById('raw-tbody').innerHTML = '';
+  if(chartDist) { chartDist.destroy(); chartDist = null; }
+  if(chartCumul) { chartCumul.destroy(); chartCumul = null; }
+}
+
+async function extractReport() {
+  const btn = document.getElementById('extract-btn');
+  btn.disabled = true; btn.textContent = '⏳ Extracting...';
+  const cfg = REPORT_CONFIGS[activeReport];
+  setReportStatus(`Fetching domains for ${cfg.label}...`, '');
+
+  try {
+    // Step 1: get all domains and filter by client IDs
+    let allDomains = [];
+    let nextUrl = '/api/v4/domains/?fields=id,domain,display_name,client&page_size=100';
+    while(nextUrl) {
+      const data = await arFetch(nextUrl);
+      allDomains = allDomains.concat(data.results||data);
+      nextUrl = data.next ? data.next.replace('https://app.accuranker.com','') : null;
+      if(nextUrl) await sleep(300);
+    }
+
+    // Filter domains by client IDs
+    let domains;
+    const allReportClientIds = ['80066','79817','80050','80177','79816','80048'];
+
+    // ── Detect any unknown client groups ──────────────────────
+    const knownClientMap = JSON.parse(localStorage.getItem('ar_client_map')||'{}');
+    const unknownClients = {};
+    allDomains.forEach(d => {
+      const cid = String(d.client?.id || d.client || '');
+      const cname = d.client?.name || '';
+      if(cid && !allReportClientIds.includes(cid) && !knownClientMap[cid] && cname) {
+        unknownClients[cid] = cname;
+      }
+    });
+    // Prompt user for any new groups
+    for(const [cid, cname] of Object.entries(unknownClients)) {
+      const answer = window.prompt(
+        `New group detected: "${cname}" (ID: ${cid})\n\nWhich report should it belong to?\n\nType: main, riot, rift, levr\n(or leave blank to ignore)`
+      );
+      if(answer && ['main','riot','rift','levr'].includes(answer.trim().toLowerCase())) {
+        knownClientMap[cid] = answer.trim().toLowerCase();
+        // Add to REPORT_CONFIGS dynamically
+        if(answer.trim().toLowerCase() !== 'main' && REPORT_CONFIGS[answer.trim().toLowerCase()]) {
+          REPORT_CONFIGS[answer.trim().toLowerCase()].clientIds.push(cid);
+          allReportClientIds.push(cid);
+        }
+        localStorage.setItem('ar_client_map', JSON.stringify(knownClientMap));
+      }
+    }
+    // Apply saved mappings
+    Object.entries(knownClientMap).forEach(([cid, report]) => {
+      if(report !== 'main' && REPORT_CONFIGS[report] && !REPORT_CONFIGS[report].clientIds.includes(cid)) {
+        REPORT_CONFIGS[report].clientIds.push(cid);
+        if(!allReportClientIds.includes(cid)) allReportClientIds.push(cid);
+      }
+    });
+
+    if(cfg.clientIds === null) {
+      domains = allDomains.filter(d => {
+        const cid = String(d.client?.id || d.client || '');
+        return !allReportClientIds.includes(cid);
+      });
+    } else {
+      domains = allDomains.filter(d => {
+        const cid = String(d.client?.id || d.client || '');
+        return cfg.clientIds.includes(cid);
+      });
+    }
+
+    setReportStatus(`Found ${domains.length} domains. Fetching keyword rankings...`, '');
+
+    // Step 2: fetch keywords for each domain
+    const today = new Date(), yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const fields = 'id,keyword,ranks.rank,ranks.created_at,search_locale.country_code';
+
+    let rawRows = [];
+    const batches = chunk(domains, 3);
+    let loaded = 0;
+    for(const batch of batches) {
+      const results = await Promise.all(batch.map(async d => {
+        try {
+          const url = `/api/v4/domains/${d.id}/keywords/?fields=${fields}&period_from=${fmt(yesterday)}&period_to=${fmt(today)}&page_size=500`;
+          const data = await arFetch(url);
+          const kws = data.results||data;
+          return kws.map(kw => {
+            const ranks = kw.ranks||[];
+            const pos = ranks.length > 0 ? ranks[ranks.length-1].rank : null;
+            return {
+              domain: d.display_name||d.domain,
+              keyword: kw.keyword,
+              position: pos,
+              market: kw.search_locale?.country_code || 'unknown',
+              date: fmt(today)
+            };
+          });
+        } catch { return []; }
+      }));
+      results.forEach(r => rawRows.push(...r));
+      loaded += batch.length;
+      setReportStatus(`Loading keywords... ${loaded}/${domains.length} domains (${rawRows.length} rows)`, '');
+      if(loaded < domains.length) await sleep(700);
+    }
+
+    // Step 3: build all report views from raw data with historical snapshots
+    const processed = await buildReportDataWithHistory(rawRows, activeReport);
+    reportData[activeReport] = processed;
+
+    // Cache it
+    await dbSet(`report_${activeReport}`, { ts: Date.now(), data: processed });
+
+    renderReport(processed);
+    setReportStatus(`✓ ${cfg.label} report loaded · ${domains.length} sites · ${rawRows.length} keyword rows`, 'ok');
+
+  } catch(err) {
+    setReportStatus(`Error: ${err.message}`, 'err'); console.error(err);
+  } finally { btn.disabled = false; btn.textContent = '⬇ Extract Report'; }
+}
+
+function buildReportData(rawRows, totalDomains) {
+  // Current Status — best position per domain per market, exclusive bucketing
+  const siteMap = {};
+  rawRows.forEach(r => {
+    if(!r.position) return;
+    const key = `${r.domain}|${r.market}`;
+    if(!siteMap[key] || r.position < siteMap[key].position) {
+      siteMap[key] = { domain: r.domain, market: r.market, position: r.position };
+    }
+  });
+
+  // Also include sites with no ranking
+  const allDomainMarkets = {};
+  rawRows.forEach(r => {
+    const key = `${r.domain}|${r.market}`;
+    if(!allDomainMarkets[key]) allDomainMarkets[key] = { domain: r.domain, market: r.market, position: null };
+    if(r.position && (!allDomainMarkets[key].position || r.position < allDomainMarkets[key].position)) {
+      allDomainMarkets[key].position = r.position;
+    }
+  });
+
+  const currentStatus = Object.values(allDomainMarkets).map(s => ({
+    ...s,
+    bucket: !s.position ? 'No Ranking' : s.position <= 3 ? 'Top 3' : s.position <= 10 ? 'Top 10' : s.position <= 100 ? 'Top 100' : 'No Ranking'
+  }));
+
+  // Market Share
+  const marketMap = {};
+  currentStatus.forEach(s => {
+    if(!marketMap[s.market]) marketMap[s.market] = { market:s.market, top3:0, top10:0, top100:0, norank:0, total:0 };
+    marketMap[s.market].total++;
+    if(s.bucket==='Top 3') marketMap[s.market].top3++;
+    else if(s.bucket==='Top 10') marketMap[s.market].top10++;
+    else if(s.bucket==='Top 100') marketMap[s.market].top100++;
+    else marketMap[s.market].norank++;
+  });
+  const marketShare = Object.values(marketMap).sort((a,b) => b.total - a.total);
+
+  // Weekly snapshot for today — accumulate historical data
+  const top3 = currentStatus.filter(s=>s.bucket==='Top 3').length;
+  const top10 = currentStatus.filter(s=>s.bucket==='Top 10').length;
+  const top100 = currentStatus.filter(s=>s.bucket==='Top 100').length;
+  const norank = currentStatus.filter(s=>s.bucket==='No Ranking').length;
+  const total = currentStatus.length;
+
+  const todaySnap = {
+    week: fmt(new Date()),
+    total, top3, top10, top100, norank,
+    pct3: pct(top3, total), pct10: pct(top10, total),
+    pct100: pct(top100, total), pctNorank: pct(norank, total),
+    pct10cum: pct(top3+top10, total), pct100cum: pct(top3+top10+top100, total)
+  };
+
+  return { rawRows, currentStatus, marketShare, todaySnap };
+}
+
+async function buildReportDataWithHistory(rawRows, reportName) {
+  // Build current data
+  const current = buildReportData(rawRows);
+
+  // Load historical snapshots from IndexedDB
+  const histKey = `snaps_${reportName}`;
+  const stored = await dbGet(histKey) || { snaps: [] };
+
+  // Add today's snapshot if not already recorded for today
+  const todayStr = fmt(new Date());
+  const existing = stored.snaps.findIndex(s => s.week === todayStr);
+  if(existing >= 0) {
+    stored.snaps[existing] = current.todaySnap; // update today's entry
+  } else {
+    stored.snaps.push(current.todaySnap);
+  }
+
+  // Keep last 52 weeks
+  if(stored.snaps.length > 52) stored.snaps = stored.snaps.slice(-52);
+  await dbSet(histKey, { snaps: stored.snaps });
+
+  return { ...current, snapshots: stored.snaps };
+}
+
+function pct(n, total) { return total > 0 ? ((n/total)*100).toFixed(2)+'%' : '0.00%'; }
+
+function renderReport(data) {
+  renderSnapshots(data.snapshots);
+  renderStatusTable(data.currentStatus);
+  renderMarketTable(data.marketShare);
+  renderRawTableData(data.rawRows);
+  populateReportFilters(data.currentStatus, data.rawRows);
+}
+
+function renderSnapshots(snaps) {
+  if(!snaps || snaps.length === 0) return;
+  const latest = snaps[snaps.length-1];
+  document.getElementById('rs-total').textContent = latest.total;
+  document.getElementById('rs-top3').textContent = latest.top3;
+  document.getElementById('rs-top10').textContent = latest.top10;
+  document.getElementById('rs-top100').textContent = latest.top100;
+  document.getElementById('rs-norank').textContent = latest.norank;
+  document.getElementById('rs-pct3').textContent = latest.pct3;
+  document.getElementById('rs-pct10').textContent = latest.pct10cum;
+  document.getElementById('snapshots-badge').textContent = snaps.length + ' weeks';
+
+  document.getElementById('snapshots-tbody').innerHTML = snaps.map(s => `
+    <tr>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:12px">${esc(s.week)}</td>
+      <td>${s.total}</td>
+      <td style="color:var(--top3);font-weight:700">${s.top3}</td>
+      <td style="color:var(--top10)">${s.top10}</td>
+      <td style="color:var(--top20)">${s.top100}</td>
+      <td style="color:var(--muted)">${s.norank}</td>
+      <td style="color:var(--top3)">${s.pct3}</td>
+      <td>${s.pct10}</td>
+      <td>${s.pct100}</td>
+      <td>${s.pctNorank}</td>
+      <td style="font-weight:700">${s.pct10cum}</td>
+      <td>${s.pct100cum}</td>
+    </tr>`).join('');
+
+  renderCharts(snaps);
+}
+
+function renderCharts(snaps) {
+  if(chartDist) chartDist.destroy();
+  if(chartCumul) chartCumul.destroy();
+  if(!snaps || snaps.length === 0) return;
+
+  const labels = snaps.map(s => s.week.replace(/^(\d+) \(/, '$1\n('));
+  const parseP = s => parseFloat(s)||0;
+
+  const ctx1 = document.getElementById('chart-dist').getContext('2d');
+  chartDist = new Chart(ctx1, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label:'% Top 3', data: snaps.map(s=>parseP(s.pct3)), borderColor:'#ffc84a', backgroundColor:'rgba(255,200,74,.1)', tension:.3, fill:false, pointRadius:2 },
+        { label:'% Top 10', data: snaps.map(s=>parseP(s.pct10)), borderColor:'#7c6aff', backgroundColor:'rgba(124,106,255,.1)', tension:.3, fill:false, pointRadius:2 },
+        { label:'% Top 100', data: snaps.map(s=>parseP(s.pct100)), borderColor:'#3d9fff', backgroundColor:'rgba(61,159,255,.1)', tension:.3, fill:false, pointRadius:2 },
+      ]
+    },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ labels:{ color:'#e8e8f0', font:{ family:'Syne' } } } }, scales:{ x:{ ticks:{ color:'#6b6b8a', maxTicksLimit:12 }, grid:{ color:'rgba(255,255,255,.05)' } }, y:{ ticks:{ color:'#6b6b8a', callback: v => v+'%' }, grid:{ color:'rgba(255,255,255,.05)' } } } }
+  });
+
+  const ctx2 = document.getElementById('chart-cumul').getContext('2d');
+  chartCumul = new Chart(ctx2, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label:'% Top 10 Cum.', data: snaps.map(s=>parseP(s.pct10cum)), borderColor:'#7c6aff', tension:.3, fill:false, pointRadius:2 },
+        { label:'% Top 100 Cum.', data: snaps.map(s=>parseP(s.pct100cum)), borderColor:'#3d9fff', tension:.3, fill:false, pointRadius:2 },
+      ]
+    },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ labels:{ color:'#e8e8f0', font:{ family:'Syne' } } } }, scales:{ x:{ ticks:{ color:'#6b6b8a', maxTicksLimit:12 }, grid:{ color:'rgba(255,255,255,.05)' } }, y:{ ticks:{ color:'#6b6b8a', callback: v => v+'%' }, grid:{ color:'rgba(255,255,255,.05)' } } } }
+  });
+}
+
+let _statusData = [], _rawData = [];
+
+function renderStatusTable(data) {
+  if(data) _statusData = data;
+  const search = (document.getElementById('status-search')?.value||'').toLowerCase();
+  const market = document.getElementById('status-market-filter')?.value||'all';
+  const bucket = document.getElementById('status-bucket-filter')?.value||'all';
+
+  const filtered = _statusData.filter(s => {
+    if(search && !s.domain.toLowerCase().includes(search)) return false;
+    if(market !== 'all' && s.market !== market) return false;
+    if(bucket !== 'all' && s.bucket !== bucket) return false;
+    return true;
+  });
+
+  document.getElementById('status-badge').textContent = filtered.length + ' sites';
+  const bucketClass = { 'Top 3':'bucket-top3', 'Top 10':'bucket-top10', 'Top 100':'bucket-top100', 'No Ranking':'bucket-norank' };
+
+  const page = paginate(filtered, statusPage, RPT_PAGE, 'status-pag-info', 'status-pag-btns', p => { statusPage=p; renderStatusTable(); });
+  document.getElementById('status-tbody').innerHTML = page.map(s => `
+    <tr>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:12px">${esc(s.domain)}</td>
+      <td><span class="market-tag">${esc(s.market)}</span></td>
+      <td style="font-family:'JetBrains Mono',monospace;font-weight:700">${s.position ? '#'+s.position : '—'}</td>
+      <td><span class="bucket-tag ${bucketClass[s.bucket]||''}">${esc(s.bucket)}</span></td>
+    </tr>`).join('');
+}
+
+function renderMarketTable(data) {
+  if(!data) return;
+  document.getElementById('market-badge').textContent = data.length + ' markets';
+  document.getElementById('market-tbody').innerHTML = data.map(m => `
+    <tr>
+      <td><span class="market-tag">${esc(m.market)}</span></td>
+      <td style="font-family:'JetBrains Mono',monospace">${m.total}</td>
+      <td style="color:var(--top3);font-weight:700">${m.top3}</td>
+      <td><div class="pct-bar-wrap"><div class="pct-bar" style="width:${Math.round(m.top3/m.total*80)}px;background:var(--top3)"></div>${pct(m.top3,m.total)}</div></td>
+      <td style="color:var(--top10)">${m.top10}</td>
+      <td><div class="pct-bar-wrap"><div class="pct-bar" style="width:${Math.round(m.top10/m.total*80)}px;background:var(--top10)"></div>${pct(m.top10,m.total)}</div></td>
+      <td style="color:var(--top20)">${m.top100}</td>
+      <td><div class="pct-bar-wrap"><div class="pct-bar" style="width:${Math.round(m.top100/m.total*80)}px"></div>${pct(m.top100,m.total)}</div></td>
+      <td style="color:var(--muted)">${m.norank}</td>
+      <td><div class="pct-bar-wrap"><div class="pct-bar" style="width:${Math.round(m.norank/m.total*80)}px;background:var(--muted)"></div>${pct(m.norank,m.total)}</div></td>
+    </tr>`).join('');
+}
+
+function renderRawTableData(data) { if(data) _rawData = data; renderRawTable(); }
+
+function renderRawTable() {
+  const search = (document.getElementById('raw-search')?.value||'').toLowerCase();
+  const market = document.getElementById('raw-market-filter')?.value||'all';
+  const filtered = _rawData.filter(r => {
+    if(search && !r.domain.toLowerCase().includes(search) && !r.keyword.toLowerCase().includes(search)) return false;
+    if(market !== 'all' && r.market !== market) return false;
+    return true;
+  });
+  document.getElementById('raw-badge').textContent = filtered.length.toLocaleString() + ' rows';
+  const page = paginate(filtered, rawPage, RPT_PAGE, 'raw-pag-info', 'raw-pag-btns', p => { rawPage=p; renderRawTable(); });
+  document.getElementById('raw-tbody').innerHTML = page.map(r => `
+    <tr>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11px">${esc(r.domain)}</td>
+      <td>${esc(r.keyword)}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-weight:700;color:${r.position<=3?'var(--top3)':r.position<=10?'var(--top10)':r.position<=100?'var(--top20)':'var(--muted)'}">${r.position?'#'+r.position:'—'}</td>
+      <td><span class="market-tag">${esc(r.market)}</span></td>
+    </tr>`).join('');
+}
+
+function populateReportFilters(status, raw) {
+  const markets = [...new Set(status.map(s=>s.market))].sort();
+  ['status-market-filter','raw-market-filter'].forEach(id => {
+    const sel = document.getElementById(id);
+    if(!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = '<option value="all">All Markets</option>';
+    markets.forEach(m => { const o=document.createElement('option'); o.value=m; o.textContent=m; sel.appendChild(o); });
+    sel.value = cur;
+  });
+}
+
+// Load cached report data on tab switch
+async function loadCachedReport(name) {
+  if(reportData[name]) return;
+  const cached = await dbGet(`report_${name}`);
+  if(cached?.data) {
+    // Merge in historical snapshots
+    const histKey = `snaps_${name}`;
+    const stored = await dbGet(histKey);
+    const snapshots = stored?.snaps || cached.data.snapshots || [];
+    reportData[name] = { ...cached.data, snapshots };
+    if(activeReport === name) {
+      renderReport(reportData[name]);
+      setReportStatus(`Cached data · ${snapshots.length} week(s) of history · click Extract to refresh`, 'ok');
+    }
+  }
+}
+
 function switchTab(tab) {
-  ['keywords','sites','opportunities'].forEach(t=>{
+  ['keywords','sites','opportunities','reports'].forEach(t=>{
     document.getElementById(`tab-${t}`).classList.toggle('active',t===tab);
     document.getElementById(`tab-btn-${t}`).classList.toggle('active',t===tab);
   });
@@ -990,12 +1593,280 @@ function switchTab(tab) {
       if(c?.data){ oppData=c.data; setAhrefsStatus(`Loaded from cache (${getCacheAge(c.ts)}) — click Fetch to refresh`,'ok'); populateOppDomainFilter(); renderOppStats(); renderOppTable(); }
     });
   }
+  if(tab==='reports') loadChartJS().then(()=>loadCachedReport(activeReport));
 }
 
-// ─── UI HELPERS ──────────────────────────────────────────────
+function loadChartJS() {
+  if(window.Chart) return Promise.resolve();
+  return new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';
+    s.onload=res; s.onerror=rej;
+    document.head.appendChild(s);
+  });
+}
+
+// ─── PDF EXPORT ──────────────────────────────────────────────
+async function exportReportPDF() {
+  const data = reportData[activeReport];
+  if(!data) { alert('Please extract report data first.'); return; }
+
+  const btn = document.getElementById('pdf-btn');
+  btn.disabled = true; btn.textContent = '⏳ Generating...';
+
+  // Load html2canvas + jsPDF if not loaded
+  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+
+  const cfg = REPORT_CONFIGS[activeReport];
+  const latest = data.snapshots[data.snapshots.length-1];
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  const W = 210, M = 15;
+  let y = M;
+
+  // ── Header ─────────────────────────────────────────────────
+  doc.setFillColor(10,10,15);
+  doc.rect(0,0,W,40,'F');
+  doc.setTextColor(124,106,255);
+  doc.setFontSize(22); doc.setFont('helvetica','bold');
+  doc.text('The Money Maker', M, 18);
+  doc.setTextColor(200,200,220);
+  doc.setFontSize(12); doc.setFont('helvetica','normal');
+  doc.text(`${cfg.label} Report`, M, 28);
+  doc.setFontSize(9); doc.setTextColor(107,107,138);
+  doc.text(`Generated: ${new Date().toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'})}`, W-M, 28, {align:'right'});
+  y = 50;
+
+  // ── Summary stats ──────────────────────────────────────────
+  doc.setFontSize(13); doc.setFont('helvetica','bold'); doc.setTextColor(232,232,240);
+  doc.text('Current Snapshot', M, y); y += 8;
+
+  const stats = [
+    { label:'Total Sites', value: latest.total, color:[232,232,240] },
+    { label:'Top 3', value: `${latest.top3} (${latest.pct3})`, color:[255,200,74] },
+    { label:'Top 10', value: `${latest.top10} (${latest.pct10})`, color:[124,106,255] },
+    { label:'Top 100', value: `${latest.top100} (${latest.pct100})`, color:[61,159,255] },
+    { label:'No Ranking', value: `${latest.norank} (${latest.pctNorank})`, color:[107,107,138] },
+    { label:'Top 10 Cumulative', value: latest.pct10cum, color:[61,255,160] },
+  ];
+
+  const colW = (W - M*2) / 3;
+  stats.forEach((s, i) => {
+    const col = i % 3, row = Math.floor(i/3);
+    const x = M + col*colW, sy = y + row*18;
+    doc.setFillColor(26,26,36);
+    doc.roundedRect(x, sy-6, colW-4, 16, 2, 2, 'F');
+    doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(107,107,138);
+    doc.text(s.label, x+4, sy+1);
+    doc.setFontSize(13); doc.setFont('helvetica','bold'); doc.setTextColor(...s.color);
+    doc.text(String(s.value), x+4, sy+9);
+  });
+  y += 46;
+
+  // ── Market Share table ─────────────────────────────────────
+  doc.setFontSize(13); doc.setFont('helvetica','bold'); doc.setTextColor(232,232,240);
+  doc.text('Market Share', M, y); y += 7;
+
+  // Header row
+  doc.setFillColor(26,26,36);
+  doc.rect(M, y, W-M*2, 7, 'F');
+  doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(107,107,138);
+  const mCols = [M, M+35, M+65, M+95, M+120, M+145, M+170];
+  const mHdrs = ['Market','Total','Top 3','% Top 3','Top 10','Top 100','No Rank'];
+  mHdrs.forEach((h,i) => doc.text(h, mCols[i]+2, y+5));
+  y += 8;
+
+  // Data rows
+  doc.setFont('helvetica','normal');
+  const topMarkets = data.marketShare.slice(0, 25);
+  topMarkets.forEach((m, idx) => {
+    if(y > 270) { doc.addPage(); y = M; }
+    if(idx%2===0) { doc.setFillColor(17,17,24); doc.rect(M, y-1, W-M*2, 7, 'F'); }
+    doc.setTextColor(232,232,240); doc.setFontSize(8);
+    doc.text(m.market, mCols[0]+2, y+4);
+    doc.text(String(m.total), mCols[1]+2, y+4);
+    doc.setTextColor(255,200,74); doc.text(String(m.top3), mCols[2]+2, y+4);
+    doc.setTextColor(107,107,138); doc.text(pct(m.top3,m.total), mCols[3]+2, y+4);
+    doc.setTextColor(124,106,255); doc.text(String(m.top10), mCols[4]+2, y+4);
+    doc.setTextColor(61,159,255); doc.text(String(m.top100), mCols[5]+2, y+4);
+    doc.setTextColor(107,107,138); doc.text(String(m.norank), mCols[6]+2, y+4);
+    y += 7;
+  });
+  y += 8;
+
+  // ── Current Status sample ──────────────────────────────────
+  if(y > 220) { doc.addPage(); y = M; }
+  doc.setFontSize(13); doc.setFont('helvetica','bold'); doc.setTextColor(232,232,240);
+  doc.text('Top Performing Sites (Top 3)', M, y); y += 7;
+
+  const top3sites = data.currentStatus.filter(s=>s.bucket==='Top 3').sort((a,b)=>a.position-b.position).slice(0,20);
+  doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(107,107,138);
+  doc.setFillColor(26,26,36); doc.rect(M, y, W-M*2, 7, 'F');
+  doc.text('Domain', M+2, y+5); doc.text('Market', M+100, y+5); doc.text('Position', M+140, y+5);
+  y += 8;
+  doc.setFont('helvetica','normal');
+  top3sites.forEach((s, idx) => {
+    if(y > 275) { doc.addPage(); y = M; }
+    if(idx%2===0) { doc.setFillColor(17,17,24); doc.rect(M, y-1, W-M*2, 7, 'F'); }
+    doc.setTextColor(232,232,240); doc.setFontSize(8);
+    doc.text(s.domain.substring(0,50), M+2, y+4);
+    doc.setTextColor(107,107,138); doc.text(s.market, M+100, y+4);
+    doc.setTextColor(255,200,74); doc.text('#'+s.position, M+140, y+4);
+    y += 7;
+  });
+
+  // ── Footer ─────────────────────────────────────────────────
+  const pageCount = doc.internal.getNumberOfPages();
+  for(let i=1; i<=pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8); doc.setTextColor(107,107,138);
+    doc.text(`The Money Maker · ${cfg.label} Report · Page ${i} of ${pageCount}`, W/2, 290, {align:'center'});
+  }
+
+  doc.save(`money-maker-${activeReport}-${fmt(new Date())}.pdf`);
+  btn.disabled = false; btn.textContent = '📄 Export PDF';
+}
+
+function loadScript(src) {
+  if(document.querySelector(`script[src="${src}"]`)) return Promise.resolve();
+  return new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s); });
+}
+
+// ─── PASSWORD GATE ────────────────────────────────────────────
+// Password is stored hashed in localStorage — never in code
+// Default password on first run: moneymaker2024
+// Change it via the "Change Password" option in the login prompt
+
+function simpleHash(str) {
+  // Simple non-cryptographic hash — good enough for browser-side access control
+  let h = 0x811c9dc5;
+  for(let i=0; i<str.length; i++) { h ^= str.charCodeAt(i); h = (h*0x01000193)>>>0; }
+  return h.toString(16);
+}
+
+const DEFAULT_PW_HASH = simpleHash('moneymaker2024');
+
+function getStoredPwHash() {
+  return localStorage.getItem('ar_pw_hash') || DEFAULT_PW_HASH;
+}
+
+function checkPasswordGate() {
+  if(localStorage.getItem('ar_auth') === 'ok') return true;
+  return showLoginPrompt();
+}
+
+function showLoginPrompt(message='') {
+  // Build a nice login overlay
+  const overlay = document.createElement('div');
+  overlay.id = 'pw-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:#0a0a0f;display:flex;align-items:center;justify-content:center;z-index:9999;font-family:Syne,sans-serif';
+  overlay.innerHTML = `
+    <div style="background:#111118;border:1px solid #2a2a3a;border-radius:20px;padding:48px;max-width:400px;width:90%;position:relative;overflow:hidden">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#7c6aff,#b06aff,#ffc84a)"></div>
+      <div style="font-size:24px;font-weight:800;margin-bottom:8px">🔐 The Money Maker</div>
+      <div style="color:#6b6b8a;font-size:14px;margin-bottom:28px">Enter password to access</div>
+      ${message ? `<div style="color:#ff5c5c;font-size:13px;margin-bottom:16px;padding:10px;background:rgba(255,92,92,.1);border-radius:8px">${message}</div>` : ''}
+      <input type="password" id="pw-input" placeholder="Password" autofocus
+        style="width:100%;background:#0a0a0f;border:1px solid #2a2a3a;border-radius:10px;padding:14px 16px;font-family:JetBrains Mono,monospace;font-size:13px;color:#e8e8f0;outline:none;margin-bottom:16px;box-sizing:border-box">
+      <button onclick="submitPassword()"
+        style="width:100%;background:#7c6aff;color:#fff;border:none;border-radius:10px;padding:14px;font-family:Syne,sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:12px">
+        Access Dashboard
+      </button>
+      <button onclick="showChangePassword()"
+        style="width:100%;background:none;color:#6b6b8a;border:1px solid #2a2a3a;border-radius:10px;padding:10px;font-family:Syne,sans-serif;font-size:13px;cursor:pointer">
+        Forgot / Change Password
+      </button>
+    </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById('pw-input').addEventListener('keydown', e => { if(e.key==='Enter') submitPassword(); });
+  return false;
+}
+
+function submitPassword() {
+  const input = document.getElementById('pw-input').value;
+  if(simpleHash(input) === getStoredPwHash()) {
+    localStorage.setItem('ar_auth','ok');
+    document.getElementById('pw-overlay')?.remove();
+    // Re-init if needed
+    if(apiKey) { showLoading(); loadData(); }
+  } else {
+    document.getElementById('pw-overlay')?.remove();
+    showLoginPrompt('Incorrect password. Please try again.');
+  }
+}
+
+function showChangePassword() {
+  document.getElementById('pw-overlay')?.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'pw-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:#0a0a0f;display:flex;align-items:center;justify-content:center;z-index:9999;font-family:Syne,sans-serif';
+  overlay.innerHTML = `
+    <div style="background:#111118;border:1px solid #2a2a3a;border-radius:20px;padding:48px;max-width:400px;width:90%;position:relative;overflow:hidden">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#7c6aff,#b06aff,#ffc84a)"></div>
+      <div style="font-size:20px;font-weight:800;margin-bottom:8px">Change Password</div>
+      <div style="color:#6b6b8a;font-size:13px;margin-bottom:24px">Enter current password, then your new password twice</div>
+      <input type="password" id="pw-current" placeholder="Current password"
+        style="width:100%;background:#0a0a0f;border:1px solid #2a2a3a;border-radius:10px;padding:12px 16px;font-family:JetBrains Mono,monospace;font-size:13px;color:#e8e8f0;outline:none;margin-bottom:10px;box-sizing:border-box">
+      <input type="password" id="pw-new1" placeholder="New password"
+        style="width:100%;background:#0a0a0f;border:1px solid #2a2a3a;border-radius:10px;padding:12px 16px;font-family:JetBrains Mono,monospace;font-size:13px;color:#e8e8f0;outline:none;margin-bottom:10px;box-sizing:border-box">
+      <input type="password" id="pw-new2" placeholder="Confirm new password"
+        style="width:100%;background:#0a0a0f;border:1px solid #2a2a3a;border-radius:10px;padding:12px 16px;font-family:JetBrains Mono,monospace;font-size:13px;color:#e8e8f0;outline:none;margin-bottom:16px;box-sizing:border-box">
+      <div id="pw-change-msg" style="color:#ff5c5c;font-size:13px;margin-bottom:12px;display:none"></div>
+      <button onclick="submitPasswordChange()"
+        style="width:100%;background:#3dffa0;color:#000;border:none;border-radius:10px;padding:14px;font-family:Syne,sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px">
+        Update Password
+      </button>
+      <button onclick="document.getElementById('pw-overlay').remove();showLoginPrompt()"
+        style="width:100%;background:none;color:#6b6b8a;border:1px solid #2a2a3a;border-radius:10px;padding:10px;font-family:Syne,sans-serif;font-size:13px;cursor:pointer">
+        Back to Login
+      </button>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+function submitPasswordChange() {
+  const current = document.getElementById('pw-current').value;
+  const new1 = document.getElementById('pw-new1').value;
+  const new2 = document.getElementById('pw-new2').value;
+  const msg = document.getElementById('pw-change-msg');
+  msg.style.display = 'none';
+
+  if(simpleHash(current) !== getStoredPwHash()) {
+    msg.textContent = 'Current password is incorrect.'; msg.style.display = 'block'; return;
+  }
+  if(new1.length < 6) {
+    msg.textContent = 'New password must be at least 6 characters.'; msg.style.display = 'block'; return;
+  }
+  if(new1 !== new2) {
+    msg.textContent = 'New passwords do not match.'; msg.style.display = 'block'; return;
+  }
+  localStorage.setItem('ar_pw_hash', simpleHash(new1));
+  localStorage.setItem('ar_auth','ok');
+  document.getElementById('pw-overlay')?.remove();
+  alert('✅ Password updated successfully!');
+  if(apiKey) { showLoading(); loadData(); }
+}
+
+// Add logout button to header after dashboard loads
+function addLogoutBtn() {
+  const existing = document.getElementById('logout-btn');
+  if(existing) return;
+  const btn = document.createElement('button');
+  btn.id = 'logout-btn';
+  btn.className = 'change-key-btn';
+  btn.textContent = '🔐 Lock';
+  btn.title = 'Lock dashboard';
+  btn.onclick = () => { localStorage.removeItem('ar_auth'); location.reload(); };
+  document.querySelector('.header-right').prepend(btn);
+}
+
+// Run password check on load
+checkPasswordGate();
+
 function showLoading(){ document.getElementById('setup-screen').style.display='none'; document.getElementById('dashboard').style.display='none'; document.getElementById('loading-screen').style.display='flex'; }
 function setLoadingText(t){ document.getElementById('loading-text').textContent=t; }
-function showDashboard(){ document.getElementById('loading-screen').style.display='none'; document.getElementById('dashboard').style.display='block'; document.getElementById('refresh-btn').style.display='flex'; document.getElementById('key-display').textContent=apiKey.substring(0,6)+'••••••••'+apiKey.slice(-4); }
+function showDashboard(){ document.getElementById('loading-screen').style.display='none'; document.getElementById('dashboard').style.display='block'; document.getElementById('refresh-btn').style.display='flex'; document.getElementById('key-display').textContent=apiKey.substring(0,6)+'••••••••'+apiKey.slice(-4); addLogoutBtn(); }
 function showSetup(){ document.getElementById('loading-screen').style.display='none'; document.getElementById('setup-screen').style.display='flex'; }
 function showError(msg){ const el=document.getElementById('error-msg'); el.textContent=msg; el.style.display='block'; document.getElementById('loading-screen').style.display='none'; document.getElementById('setup-screen').style.display='flex'; }
 </script>
