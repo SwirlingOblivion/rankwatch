@@ -535,14 +535,31 @@ async function arFetch(path){
 }
 async function fetchClientDomainIds(clientId){
   const ids=new Set();
-  const filter=JSON.stringify([{"attribute":"clients_list","type":"list","comparison":"contains","value":[String(clientId)]}]);
-  let next=`/api/v4/domains/?fields=id&page_size=100&filter=${encodeURIComponent(filter)}`;
+  // AccuRanker has a /clients/{id}/domains/ endpoint
+  let next=`/api/v4/clients/${clientId}/domains/?fields=id&page_size=100`;
   let attempts=0;
   while(next&&attempts<20){
     attempts++;
-    try{const data=await arFetch(next);(data.results||(Array.isArray(data)?data:[])).forEach(d=>ids.add(d.id));next=data.next?data.next.replace('https://app.accuranker.com',''):null;if(next)await sleep(200);}
-    catch(e){console.warn('fetchClientIds:',e.message);break;}
+    try{
+      const data=await arFetch(next);
+      const results=data.results||(Array.isArray(data)?data:[]);
+      results.forEach(d=>ids.add(d.id));
+      next=data.next?data.next.replace('https://app.accuranker.com',''):null;
+      if(next)await sleep(200);
+    }catch(e){
+      console.warn(`fetchClientDomainIds(${clientId}):`,e.message);
+      // Try alternative: /api/v4/domains/?client_id=X
+      try{
+        let alt=`/api/v4/domains/?fields=id&client=${clientId}&page_size=100`;
+        const data=await arFetch(alt);
+        const results=data.results||(Array.isArray(data)?data:[]);
+        results.forEach(d=>ids.add(d.id));
+        console.log(`Alt fetch for client ${clientId}:`,results.length,'domains');
+      }catch(e2){console.warn('Alt also failed:',e2.message);}
+      break;
+    }
   }
+  console.log(`Client ${clientId}: ${ids.size} domain IDs`);
   return ids;
 }
 
