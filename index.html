@@ -491,10 +491,10 @@ let activeReport='main',activeReportSub='snapshots',reportData={},statusPage=1,r
 let chartDist=null,chartCumul=null;
 const PAGE_SIZE=50,RPT_PAGE=50;
 const REPORT_CONFIGS={
-  main:{label:'Main',groupIds:null},
-  riot:{label:'RIOT',groupIds:['80066','79817','80050','80177']},
-  rift:{label:'RIFT',groupIds:['79816']},
-  levr:{label:'LEVR',groupIds:['80048']},
+  main:{label:'Main',groupIds:null,groupNames:null},
+  riot:{label:'RIOT',groupIds:['80066','79817','80050','80177'],groupNames:['RIOT Affiliate TI','RIOT Brands TI AI','RIOT LATAM TI','RUSE (TI Non Branded)']},
+  rift:{label:'RIFT',groupIds:['79816'],groupNames:['RIFT AI Brands']},
+  levr:{label:'LEVR',groupIds:['80048'],groupNames:['Levr Brands']},
 };
 
 // UTILS
@@ -533,35 +533,57 @@ async function arFetch(path){
   if(!res.ok)throw new Error(`API ${res.status}: ${res.statusText}`);
   return res.json();
 }
+// Cache: group name -> group id, populated once per extract session
+let _groupNameCache=null;
+async function discoverGroupsByName(){
+  if(_groupNameCache)return _groupNameCache;
+  const map={};
+  try{
+    let next='/api/v4/groups/?page_size=100';
+    while(next){
+      const data=await arFetch(next);
+      const results=data.results||(Array.isArray(data)?data:[]);
+      results.forEach(g=>{if(g.name&&g.id)map[g.name]=String(g.id);});
+      next=data.next?data.next.replace('https://app.accuranker.com',''):null;
+      if(next)await sleep(200);
+    }
+    console.log('AccuRanker groups discovered:',map);
+  }catch(e){console.warn('Groups list endpoint failed:',e.message);}
+  _groupNameCache=map;
+  return map;
+}
+async function resolveGroupIds(cfg){
+  // Try name-based discovery first (most reliable — not dependent on hardcoded IDs)
+  if(cfg.groupNames){
+    const map=await discoverGroupsByName();
+    const resolved=cfg.groupNames.map(n=>map[n]).filter(Boolean);
+    if(resolved.length>0){console.log(`Resolved group IDs for ${cfg.label} via names:`,resolved);return resolved;}
+    console.warn(`Name-based resolution failed for ${cfg.label}, falling back to hardcoded IDs`);
+  }
+  return cfg.groupIds||[];
+}
 async function fetchGroupDomainIds(groupId){
   const ids=new Set();
-  // AccuRanker hierarchy: Workspaces -> Groups -> Domains
-  // Primary endpoint: /api/v4/groups/{id}/domains/
-  let next=`/api/v4/groups/${groupId}/domains/?fields=id&page_size=100`;
-  let attempts=0;
-  while(next&&attempts<20){
-    attempts++;
-    try{
+  // Try /api/v4/groups/{id}/domains/
+  try{
+    let next=`/api/v4/groups/${groupId}/domains/?fields=id&page_size=100`;
+    let attempts=0;
+    while(next&&attempts<20){
+      attempts++;
       const data=await arFetch(next);
       const results=data.results||(Array.isArray(data)?data:[]);
       results.forEach(d=>ids.add(d.id));
       next=data.next?data.next.replace('https://app.accuranker.com',''):null;
       if(next)await sleep(200);
       if(results.length===0)break;
-    }catch(e){
-      console.warn(`fetchGroupDomainIds(${groupId}) primary failed:`,e.message);
-      break;
     }
-  }
+  }catch(e){console.warn(`/groups/${groupId}/domains/ failed:`,e.message);}
+  // Fallback: ?group_id= filter on domains endpoint
   if(ids.size===0){
-    // Fallback: filter domains endpoint by group_id param
     try{
-      let alt=`/api/v4/domains/?fields=id&group_id=${groupId}&page_size=500`;
-      const data=await arFetch(alt);
-      const results=data.results||(Array.isArray(data)?data:[]);
-      results.forEach(d=>ids.add(d.id));
-      console.log(`Fallback group_id filter for ${groupId}:`,results.length,'domains');
-    }catch(e2){console.warn('Fallback also failed:',e2.message);}
+      const data=await arFetch(`/api/v4/domains/?fields=id&group_id=${groupId}&page_size=500`);
+      (data.results||(Array.isArray(data)?data:[])).forEach(d=>ids.add(d.id));
+    }catch(e2){console.warn(`group_id fallback for ${groupId} failed:`,e2.message);}
   }
   console.log(`Group ${groupId}: ${ids.size} domain IDs`);
   return ids;
@@ -906,18 +928,24 @@ async function extractReport(){
     let allDomains=[],nextUrl='/api/v4/domains/?fields=id,domain,display_name&page_size=100';
     while(nextUrl){const data=await arFetch(nextUrl);allDomains=allDomains.concat(data.results||data);nextUrl=data.next?data.next.replace('https://app.accuranker.com',''):null;if(nextUrl)await sleep(300);}
     let domains=[];
+    _groupNameCache=null; // reset discovery cache each extract
     if(cfg.groupIds===null){
+      // Main = all domains NOT in any named report group
+      const namedConfigs=[REPORT_CONFIGS.riot,REPORT_CONFIGS.rift,REPORT_CONFIGS.levr];
       const namedIds=new Set();
-      const allGroupIds=['80066','79817','80050','80177','79816','80048'];
       setReportStatus('Identifying named report domains...');
-      for(const gid of allGroupIds){const ids=await fetchGroupDomainIds(gid);ids.forEach(id=>namedIds.add(id));await sleep(200);}
+      for(const nc of namedConfigs){
+        const gids=await resolveGroupIds(nc);
+        for(const gid of gids){const ids=await fetchGroupDomainIds(gid);ids.forEach(id=>namedIds.add(id));await sleep(200);}
+      }
       domains=allDomains.filter(d=>!namedIds.has(d.id));
       console.log(`Main: ${domains.length} domains (excluded ${namedIds.size})`);
     }else{
+      const effectiveIds=await resolveGroupIds(cfg);
       const reportIds=new Set();
-      for(const gid of cfg.groupIds){const ids=await fetchGroupDomainIds(gid);ids.forEach(id=>reportIds.add(id));await sleep(200);}
+      for(const gid of effectiveIds){const ids=await fetchGroupDomainIds(gid);ids.forEach(id=>reportIds.add(id));await sleep(200);}
       domains=allDomains.filter(d=>reportIds.has(d.id));
-      console.log(`${cfg.label}: ${domains.length} domains`);
+      console.log(`${cfg.label}: ${domains.length} domains from groups [${effectiveIds.join(',')}]`);
     }
     setReportStatus(`Found ${domains.length} domains. Fetching keywords...`,'');
     const today=new Date(),yesterday=new Date(today);yesterday.setDate(yesterday.getDate()-1);
