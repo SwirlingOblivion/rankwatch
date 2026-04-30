@@ -982,9 +982,9 @@ function renderCharts(snaps){
   if(!snaps||snaps.length===0)return;
   const labels=snaps.map(s=>s.week),pp=s=>parseFloat(s)||0;
   const mkOpts=()=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#e8e8f0',font:{family:'Syne'}}}},scales:{x:{ticks:{color:'#6b6b8a',maxTicksLimit:12},grid:{color:'rgba(255,255,255,.05)'}},y:{ticks:{color:'#6b6b8a',callback:v=>v+'%'},grid:{color:'rgba(255,255,255,.05)'}},y1:{type:'linear',position:'right',ticks:{color:'#9b9bba'},grid:{drawOnChartArea:false}}}});
-  const mkTotal=()=>({label:'Total Sites',data:snaps.map(s=>s.total),borderColor:'#c8c8e0',borderDash:[5,3],tension:.3,fill:false,pointRadius:2,yAxisID:'y1'});
-  chartDist=new Chart(document.getElementById('chart-dist').getContext('2d'),{type:'line',data:{labels,datasets:[{label:'% Top 3',data:snaps.map(s=>pp(s.pct3)),borderColor:'#ffc84a',tension:.3,fill:false,pointRadius:2},{label:'% Top 10',data:snaps.map(s=>pp(s.pct10)),borderColor:'#7c6aff',tension:.3,fill:false,pointRadius:2},{label:'% Top 100',data:snaps.map(s=>pp(s.pct100)),borderColor:'#3d9fff',tension:.3,fill:false,pointRadius:2},mkTotal()]},options:mkOpts()});
-  chartCumul=new Chart(document.getElementById('chart-cumul').getContext('2d'),{type:'line',data:{labels,datasets:[{label:'% Top 10 Cum.',data:snaps.map(s=>pp(s.pct10cum)),borderColor:'#7c6aff',tension:.3,fill:false,pointRadius:2},{label:'% Top 100 Cum.',data:snaps.map(s=>pp(s.pct100cum)),borderColor:'#3d9fff',tension:.3,fill:false,pointRadius:2},mkTotal()]},options:mkOpts()});
+  const mkCount=(label,key,color)=>({label,data:snaps.map(s=>s[key]),borderColor:color,borderDash:[5,3],tension:.3,fill:false,pointRadius:2,yAxisID:'y1'});
+  chartDist=new Chart(document.getElementById('chart-dist').getContext('2d'),{type:'line',data:{labels,datasets:[{label:'% Top 3',data:snaps.map(s=>pp(s.pct3)),borderColor:'#ffc84a',tension:.3,fill:false,pointRadius:2},{label:'% Top 10',data:snaps.map(s=>pp(s.pct10)),borderColor:'#7c6aff',tension:.3,fill:false,pointRadius:2},{label:'% Top 100',data:snaps.map(s=>pp(s.pct100)),borderColor:'#3d9fff',tension:.3,fill:false,pointRadius:2},mkCount('# Top 3','top3','#ffc84a'),mkCount('# Top 10','top10','#7c6aff')]},options:mkOpts()});
+  chartCumul=new Chart(document.getElementById('chart-cumul').getContext('2d'),{type:'line',data:{labels,datasets:[{label:'% Top 10 Cum.',data:snaps.map(s=>pp(s.pct10cum)),borderColor:'#7c6aff',tension:.3,fill:false,pointRadius:2},{label:'% Top 100 Cum.',data:snaps.map(s=>pp(s.pct100cum)),borderColor:'#3d9fff',tension:.3,fill:false,pointRadius:2},mkCount('# Top 3','top3','#ffc84a'),mkCount('# Top 10','top10','#7c6aff')]},options:mkOpts()});
 }
 async function deleteSnapshot(week){
   if(!confirm(`Delete snapshot for ${week}?`))return;
@@ -1054,12 +1054,13 @@ async function exportReportPDF(){
     fi(M,y,cW,cH,248,248,255);doc.setDrawColor(200,200,220);doc.setLineWidth(0.2);doc.rect(M,y,cW,cH,'S');
     [0,25,50,75,100].forEach(gl=>{const gy=y+cH-(gl/100)*cH;doc.setDrawColor(220,220,230);doc.setLineWidth(0.15);doc.line(M,gy,M+cW,gy);sh(6,false,160,160,180);doc.text(gl+'%',M-2,gy+1,{align:'right'});});
     [{key:'pct3',r:200,g:150,b:0},{key:'pct10',r:100,g:80,b:200},{key:'pct100',r:30,g:120,b:200},{key:'pct10cum',r:0,g:160,b:100}].forEach(ds=>{const vals=snaps.map(s=>pp(s[ds.key]));doc.setDrawColor(ds.r,ds.g,ds.b);doc.setLineWidth(0.6);for(let i=1;i<n;i++){const x1=M+(i-1)/(n-1)*cW,y1=y+cH-(vals[i-1]/100)*cH,x2=M+i/(n-1)*cW,y2=y+cH-(vals[i]/100)*cH;doc.line(x1,y1,x2,y2);}});
-    const totVals=snaps.map(s=>s.total),minT=Math.min(...totVals),maxT=Math.max(...totVals),tRange=maxT-minT||1;
-    doc.setDrawColor(160,160,190);doc.setLineWidth(0.5);for(let i=1;i<n;i++){const x1=M+(i-1)/(n-1)*cW,y1=y+cH-((totVals[i-1]-minT)/tRange)*cH,x2=M+i/(n-1)*cW,y2=y+cH-((totVals[i]-minT)/tRange)*cH;doc.line(x1,y1,x2,y2);}
-    [0,0.5,1].forEach(f=>{const val=Math.round(minT+f*tRange),gy=y+cH-f*cH;sh(5.5,false,140,140,170);doc.text(String(val),M+cW+2,gy+1);});
+    const cntKeys=[{key:'top3',r:200,g:150,b:0},{key:'top10',r:100,g:80,b:200}];
+    const allCntVals=cntKeys.flatMap(d=>snaps.map(s=>s[d.key])),minC=Math.min(...allCntVals),maxC=Math.max(...allCntVals),cRange=maxC-minC||1;
+    cntKeys.forEach(ds=>{const vals=snaps.map(s=>s[ds.key]);doc.setDrawColor(ds.r,ds.g,ds.b);doc.setLineWidth(0.5);for(let i=1;i<n;i++){const x1=M+(i-1)/(n-1)*cW,y1=y+cH-((vals[i-1]-minC)/cRange)*cH,x2=M+i/(n-1)*cW,y2=y+cH-((vals[i]-minC)/cRange)*cH;doc.line(x1,y1,x2,y2);}});
+    [0,0.5,1].forEach(f=>{const val=Math.round(minC+f*cRange),gy=y+cH-f*cH;sh(5.5,false,140,140,170);doc.text(String(val),M+cW+2,gy+1);});
     snaps.forEach((s,i)=>{if(i%Math.max(1,Math.floor(n/8))!==0&&i!==n-1)return;sh(5.5,false,140,140,160);doc.text(s.week.substring(5),M+i/(n-1)*cW,y+cH+5,{align:'center'});});
     let lx=M;y+=cH+10;
-    [{l:'% Top 3',r:200,g:150,b:0},{l:'% Top 10',r:100,g:80,b:200},{l:'% Top 100',r:30,g:120,b:200},{l:'Top 10 Cum.',r:0,g:160,b:100},{l:'Total Sites',r:160,g:160,b:190}].forEach(ds=>{doc.setFillColor(ds.r,ds.g,ds.b);doc.rect(lx,y-3,8,3,'F');sh(7,false,80,80,100);doc.text(ds.l,lx+10,y);lx+=36;});y+=8;
+    [{l:'% Top 3',r:200,g:150,b:0},{l:'% Top 10',r:100,g:80,b:200},{l:'% Top 100',r:30,g:120,b:200},{l:'Top 10 Cum.',r:0,g:160,b:100},{l:'# Top 3 (right)',r:200,g:150,b:0},{l:'# Top 10 (right)',r:100,g:80,b:200}].forEach(ds=>{doc.setFillColor(ds.r,ds.g,ds.b);doc.rect(lx,y-3,8,3,'F');sh(7,false,80,80,100);doc.text(ds.l,lx+10,y);lx+=33;});y+=8;
   }
   chk(20);sh(12,true,40,40,60);doc.text('Market Share',M,y);y+=6;
   fi(M,y,CW,8,230,228,255);doc.setDrawColor(180,175,220);doc.setLineWidth(0.2);doc.rect(M,y,CW,8,'S');
