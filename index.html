@@ -424,7 +424,8 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <button class="report-btn" id="rbtn-riot" onclick="selectReport('riot')">⚡ RIOT</button>
       <button class="report-btn" id="rbtn-rift" onclick="selectReport('rift')">🤖 RIFT</button>
       <button class="report-btn" id="rbtn-levr" onclick="selectReport('levr')">🚀 LEVR</button>
-      <button class="btn btn-green" id="extract-btn" onclick="extractReport()" style="margin-left:auto">⬇ Extract Report</button>
+      <button class="btn" id="extract-all-btn" onclick="extractAllReports()" style="margin-left:auto;background:linear-gradient(135deg,#7c6aff,#b06aff);color:#fff;border:none">⬇⬇ Extract All</button>
+      <button class="btn btn-green" id="extract-btn" onclick="extractReport()">⬇ Extract Report</button>
       <button class="btn btn-orange" id="pdf-btn" onclick="exportReportPDF()">📄 Export PDF</button>
     </div>
     <div style="margin-bottom:20px"><span class="report-status" id="report-status">Select a report and click Extract to load data</span></div>
@@ -943,6 +944,16 @@ async function extractReport(){
     renderReport(processed);setReportStatus(`\u2713 ${cfg.label} \u00b7 ${domains.length} sites \u00b7 ${rawRows.length} rows \u00b7 ${processed.snapshots.length} weeks`,'ok');
   }catch(err){setReportStatus(`Error: ${err.message}`,'err');console.error(err);}
   finally{btn.disabled=false;btn.textContent='\u2B07 Extract Report';}
+}
+async function extractAllReports(){
+  const btn=document.getElementById('extract-all-btn');btn.disabled=true;
+  const keys=Object.keys(REPORT_CONFIGS);
+  for(let i=0;i<keys.length;i++){
+    btn.textContent=`\u2B07\u2B07 ${i+1}/${keys.length} ${REPORT_CONFIGS[keys[i]].label}...`;
+    selectReport(keys[i]);
+    await extractReport();
+  }
+  btn.disabled=false;btn.textContent='\u21D3\u21D3 Extract All';
 }
 
 function buildCurrentData(rawRows){
