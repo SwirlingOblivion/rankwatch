@@ -11,7 +11,7 @@ export default async function handler(req, res) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured in Vercel' });
 
-  const langMap = { NL: 'nl', DE: 'de', IT: 'it', ES: 'es', EN: 'en', FR: 'fr', SE: 'sv', NO: 'no', FI: 'fi' };
+  const langMap = { NL: 'nl', DE: 'de', IT: 'it', ES: 'es', EN: 'en', FR: 'fr', SE: 'sv', NO: 'no', FI: 'fi', PL: 'pl' };
   const lang = langMap[geo] || 'en';
 
   const scraperKey = process.env.SCRAPER_API_KEY;
