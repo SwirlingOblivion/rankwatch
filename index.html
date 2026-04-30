@@ -879,9 +879,8 @@ async function seedHistoricalData(){
 function selectReport(name){
   activeReport=name;
   ['main','riot','rift','levr'].forEach(r=>document.getElementById(`rbtn-${r}`).classList.toggle('active',r===name));
-  const cached=reportData[name];
-  if(cached){renderReport(cached);setReportStatus(`Cached \u00b7 ${cached.snapshots?.length||0} week(s) \u00b7 click Extract to refresh`,'ok');}
-  else{setReportStatus(`Click Extract to load ${REPORT_CONFIGS[name].label} report`,'');clearReportUI();}
+  if(reportData[name]){renderReport(reportData[name]);setReportStatus(`Cached \u00b7 ${reportData[name].snapshots?.length||0} week(s) \u00b7 click Extract to refresh`,'ok');}
+  else{clearReportUI();loadCachedReport(name).then(()=>{if(!reportData[name])setReportStatus(`Click Extract to load ${REPORT_CONFIGS[name].label} report`,'');});}
 }
 function selectReportSub(sub){
   activeReportSub=sub;
