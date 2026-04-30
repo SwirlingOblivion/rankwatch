@@ -533,76 +533,14 @@ async function arFetch(path){
   if(!res.ok)throw new Error(`API ${res.status}: ${res.statusText}`);
   return res.json();
 }
-// Cache: group name -> group id, populated once per extract session
+// Group name → group id map, built at the start of each extract from live account data
 let _groupNameCache=null;
-async function discoverGroupsByName(){
-  if(_groupNameCache)return _groupNameCache;
-  const map={};
-  const endpoints=['/api/v4/groups/?page_size=100','/api/v4/domain-groups/?page_size=100','/api/v4/group/?page_size=100'];
-  for(const ep of endpoints){
-    try{
-      const data=await arFetch(ep);
-      if(data&&!data.error){
-        const results=data.results||(Array.isArray(data)?data:[]);
-        if(results.length>0){
-          console.log(`Groups found at ${ep}, first item:`,JSON.stringify(results[0]).substring(0,300));
-          results.forEach(g=>{
-            const name=g.name||g.group_name||g.title||g.label;
-            const id=g.id||g.group_id||g.pk;
-            if(name&&id)map[String(name).trim()]=String(id);
-          });
-          break;
-        }else{console.log(`${ep} returned empty results`);}
-      }else{console.log(`${ep} returned error:`,data?.error?.substring?.(0,80));}
-    }catch(e){console.warn(`${ep} failed:`,e.message);}
-  }
-  console.log('AccuRanker groups discovered:',map);
-  _groupNameCache=map;
-  return map;
-}
-async function resolveGroupIds(cfg){
-  if(cfg.groupNames){
-    const map=await discoverGroupsByName();
-    const resolved=cfg.groupNames.map(n=>map[String(n).trim()]).filter(Boolean);
-    if(resolved.length>0){console.log(`Resolved group IDs for ${cfg.label} via names:`,resolved);return resolved;}
-    console.warn(`Name-based resolution failed for ${cfg.label}, falling back to hardcoded IDs`);
+function resolveGroupIds(cfg){
+  if(cfg.groupNames&&_groupNameCache){
+    const resolved=cfg.groupNames.map(n=>_groupNameCache[n.trim()]).filter(Boolean);
+    if(resolved.length>0)return resolved;
   }
   return cfg.groupIds||[];
-}
-async function fetchGroupDomainIds(groupId){
-  const ids=new Set();
-  // Primary: ?group_id= filter with full pagination
-  try{
-    let next=`/api/v4/domains/?fields=id&group_id=${groupId}&page_size=100`;
-    let attempts=0;
-    while(next&&attempts<20){
-      attempts++;
-      const data=await arFetch(next);
-      const results=data.results||(Array.isArray(data)?data:[]);
-      results.forEach(d=>ids.add(d.id));
-      next=data.next?data.next.replace('https://app.accuranker.com',''):null;
-      if(next)await sleep(200);
-      if(results.length===0)break;
-    }
-  }catch(e){console.warn(`group_id filter failed for ${groupId}:`,e.message);}
-  // Fallback: /api/v4/groups/{id}/domains/
-  if(ids.size===0){
-    try{
-      let next=`/api/v4/groups/${groupId}/domains/?fields=id&page_size=100`;
-      let attempts=0;
-      while(next&&attempts<20){
-        attempts++;
-        const data=await arFetch(next);
-        const results=data.results||(Array.isArray(data)?data:[]);
-        results.forEach(d=>ids.add(d.id));
-        next=data.next?data.next.replace('https://app.accuranker.com',''):null;
-        if(next)await sleep(200);
-        if(results.length===0)break;
-      }
-    }catch(e2){console.warn(`/groups/${groupId}/domains/ failed:`,e2.message);}
-  }
-  console.log(`Group ${groupId}: ${ids.size} domain IDs`);
-  return ids;
 }
 
 // AUTH
@@ -943,37 +881,32 @@ async function extractReport(){
   try{
     let allDomains=[],nextUrl='/api/v4/domains/?fields=id,domain,display_name,group&page_size=100';
     while(nextUrl){const data=await arFetch(nextUrl);allDomains=allDomains.concat(data.results||data);nextUrl=data.next?data.next.replace('https://app.accuranker.com',''):null;if(nextUrl)await sleep(300);}
-    // Discover group names by fetching each unique group ID individually
+    // Build group name → id map from live account data
     _groupNameCache=null;
     const uniqueGids=[...new Set(allDomains.map(d=>d.group?.id).filter(Boolean))];
-    console.log('Unique group IDs in account:',uniqueGids);
     const nameMap={};
     setReportStatus('Discovering groups...');
     for(const gid of uniqueGids){
       try{
         const data=await arFetch(`/api/v4/group/${gid}/`);
         const name=data.name||data.group_name||data.title||data.label;
-        if(name){nameMap[String(name).trim()]=String(gid);console.log(`Group ${gid} = "${name}"`);}
-        else console.log(`Group ${gid} keys:`,Object.keys(data));
-      }catch(e){console.warn(`Group ${gid}:`,e.message);}
+        if(name)nameMap[name.trim()]=String(gid);
+      }catch(e){}
       await sleep(100);
     }
     _groupNameCache=nameMap;
-    console.log('Group name map:',nameMap);
     let domains=[];
     if(cfg.groupIds===null){
-      const namedConfigs=[REPORT_CONFIGS.riot,REPORT_CONFIGS.rift,REPORT_CONFIGS.levr];
       const namedGids=new Set();
-      setReportStatus('Identifying named report domains...');
-      for(const nc of namedConfigs){const gids=await resolveGroupIds(nc);gids.forEach(id=>namedGids.add(String(id)));}
+      for(const nc of [REPORT_CONFIGS.riot,REPORT_CONFIGS.rift,REPORT_CONFIGS.levr]){
+        resolveGroupIds(nc).forEach(id=>namedGids.add(String(id)));
+      }
       domains=allDomains.filter(d=>!namedGids.has(String(d.group?.id)));
-      console.log(`Main: ${domains.length} domains (excluded group IDs: ${[...namedGids].join(',')})`);
     }else{
-      const effectiveIds=await resolveGroupIds(cfg);
-      const groupIdSet=new Set(effectiveIds.map(String));
+      const groupIdSet=new Set(resolveGroupIds(cfg).map(String));
       domains=allDomains.filter(d=>groupIdSet.has(String(d.group?.id)));
-      console.log(`${cfg.label}: ${domains.length} domains in groups [${effectiveIds.join(',')}]`);
     }
+    console.log(`${cfg.label}: ${domains.length} domains`);
     setReportStatus(`Found ${domains.length} domains. Fetching keywords...`,'');
     const today=new Date(),yesterday=new Date(today);yesterday.setDate(yesterday.getDate()-1);
     const fields='id,keyword,ranks.rank,ranks.created_at,search_locale.country_code';
