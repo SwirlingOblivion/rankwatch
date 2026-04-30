@@ -941,9 +941,14 @@ async function extractReport(){
   const btn=document.getElementById('extract-btn');btn.disabled=true;btn.textContent='\u23F3 Extracting...';
   const cfg=REPORT_CONFIGS[activeReport];setReportStatus(`Identifying domains for ${cfg.label}...`,'');
   try{
-    let allDomains=[],nextUrl='/api/v4/domains/?page_size=100';
+    let allDomains=[],nextUrl='/api/v4/domains/?fields=id,domain,display_name,groups,group,group_id&page_size=100';
     while(nextUrl){const data=await arFetch(nextUrl);allDomains=allDomains.concat(data.results||data);nextUrl=data.next?data.next.replace('https://app.accuranker.com',''):null;if(nextUrl)await sleep(300);}
-    if(allDomains.length>0)console.log('Domain fields:',Object.keys(allDomains[0]),'sample:',JSON.stringify(allDomains[0]).substring(0,400));
+    if(allDomains.length>0){
+      console.log('Domain fields:',Object.keys(allDomains[0]));
+      console.log('Domain sample (full):',JSON.stringify(allDomains[0]));
+      // Also fetch single domain detail to see all available fields
+      try{const d=await arFetch(`/api/v4/domains/${allDomains[0].id}/`);console.log('Single domain detail keys:',Object.keys(d),'groups field:',d.groups,d.group,d.group_id);}catch(e){console.warn('Single domain fetch:',e.message);}
+    }
     let domains=[];
     _groupNameCache=null; // reset discovery cache each extract
     if(cfg.groupIds===null){
