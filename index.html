@@ -739,13 +739,12 @@ function buildOppData(ahMap){
 }
 async function refreshAccuRankerOpps(){
   const btn=document.getElementById('refresh-ar-btn');btn.disabled=true;btn.textContent='⏳ Refreshing...';
-  setAhrefsStatus('Refreshing AccuRanker rankings...','');
+  setAhrefsStatus('Rebuilding from current rankings...','');
   try{
-    await loadData(true);
     const cached=await dbGet('ahrefs_kd');
     buildOppData(cached?.ahMap||{});
     const ahInfo=cached?`Ahrefs KD cached ${getCacheAge(cached.ts)}`:'No Ahrefs KD — click Refresh Ahrefs Data to fetch';
-    setAhrefsStatus(`✓ Rankings refreshed · ${oppData.length} opportunities · ${ahInfo}`,'ok');
+    setAhrefsStatus(`✓ Updated · ${oppData.length} opportunities · ${ahInfo}`,'ok');
   }catch(err){setAhrefsStatus(`Error: ${err.message}`,'err');}
   finally{btn.disabled=false;btn.textContent='⚡ Refresh AccuRanker';}
 }
@@ -1083,7 +1082,7 @@ function showLoginPrompt(msg=''){
   document.body.appendChild(o);
   document.getElementById('pw-input').addEventListener('keydown',e=>{if(e.key==='Enter')submitPassword();});
 }
-function submitPassword(){const input=document.getElementById('pw-input').value;if(simpleHash(input)===getPwHash()){localStorage.setItem('ar_auth','ok');document.getElementById('pw-overlay')?.remove();if(apiKey){showLoading();loadData();}}else showLoginPrompt('Incorrect password. Please try again.');}
+function submitPassword(){const input=document.getElementById('pw-input').value;if(simpleHash(input)===getPwHash()){localStorage.setItem('ar_auth','ok');document.getElementById('pw-overlay')?.remove();if(apiKey){if(allKeywords.length>0)showDashboard();else{showLoading();loadData();}}}else showLoginPrompt('Incorrect password. Please try again.');}
 function showChangePassword(){
   document.getElementById('pw-overlay')?.remove();
   const o=document.createElement('div');o.id='pw-overlay';
