@@ -1225,8 +1225,8 @@ function renderCasinoResults(){
   const geoData=casinoResults[activeCasinoGeo],el=document.getElementById('casino-results'),badge=document.getElementById('casino-total-badge'),timeEl=document.getElementById('casino-scan-time');
   if(!el)return;
   if(!geoData||!Object.keys(geoData.urls||{}).length){el.innerHTML=`<div style="color:var(--muted);font-size:13px;grid-column:1/-1">No results yet — click Scan to fetch casinos</div>`;badge.textContent='—';timeEl.textContent='';return;}
-  const all=new Set();Object.values(geoData.urls).forEach(r=>r.casinos?.forEach(c=>all.add(c)));
-  const sorted=[...all].sort((a,b)=>a.localeCompare(b));
+  const seen=new Map();Object.values(geoData.urls).forEach(r=>r.casinos?.forEach(c=>{const k=c.toLowerCase();if(!seen.has(k)||c.replace(/[^A-Z]/g,'').length>seen.get(k).replace(/[^A-Z]/g,'').length)seen.set(k,c);}));
+  const sorted=[...seen.values()].sort((a,b)=>a.localeCompare(b));
   badge.textContent=`${sorted.length} casinos`;
   const latest=Math.max(...Object.values(geoData.urls).map(r=>r.ts||0));
   timeEl.textContent=latest?`Last scanned ${getCacheAge(latest)}`:'';
