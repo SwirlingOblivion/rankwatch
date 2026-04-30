@@ -941,33 +941,38 @@ async function extractReport(){
   const btn=document.getElementById('extract-btn');btn.disabled=true;btn.textContent='\u23F3 Extracting...';
   const cfg=REPORT_CONFIGS[activeReport];setReportStatus(`Identifying domains for ${cfg.label}...`,'');
   try{
-    let allDomains=[],nextUrl='/api/v4/domains/?fields=id,domain,display_name,groups,group,group_id&page_size=100';
+    let allDomains=[],nextUrl='/api/v4/domains/?fields=id,domain,display_name,group&page_size=100';
     while(nextUrl){const data=await arFetch(nextUrl);allDomains=allDomains.concat(data.results||data);nextUrl=data.next?data.next.replace('https://app.accuranker.com',''):null;if(nextUrl)await sleep(300);}
-    if(allDomains.length>0){
-      console.log('Domain fields:',Object.keys(allDomains[0]));
-      console.log('Domain sample (full):',JSON.stringify(allDomains[0]));
-      // Also fetch single domain detail to see all available fields
-      try{const d=await arFetch(`/api/v4/domains/${allDomains[0].id}/`);console.log('Single domain detail keys:',Object.keys(d),'groups field:',d.groups,d.group,d.group_id);}catch(e){console.warn('Single domain fetch:',e.message);}
+    // Discover group names by fetching each unique group ID individually
+    _groupNameCache=null;
+    const uniqueGids=[...new Set(allDomains.map(d=>d.group?.id).filter(Boolean))];
+    console.log('Unique group IDs in account:',uniqueGids);
+    const nameMap={};
+    setReportStatus('Discovering groups...');
+    for(const gid of uniqueGids){
+      try{
+        const data=await arFetch(`/api/v4/group/${gid}/`);
+        const name=data.name||data.group_name||data.title||data.label;
+        if(name){nameMap[String(name).trim()]=String(gid);console.log(`Group ${gid} = "${name}"`);}
+        else console.log(`Group ${gid} keys:`,Object.keys(data));
+      }catch(e){console.warn(`Group ${gid}:`,e.message);}
+      await sleep(100);
     }
+    _groupNameCache=nameMap;
+    console.log('Group name map:',nameMap);
     let domains=[];
-    _groupNameCache=null; // reset discovery cache each extract
     if(cfg.groupIds===null){
-      // Main = all domains NOT in any named report group
       const namedConfigs=[REPORT_CONFIGS.riot,REPORT_CONFIGS.rift,REPORT_CONFIGS.levr];
-      const namedIds=new Set();
+      const namedGids=new Set();
       setReportStatus('Identifying named report domains...');
-      for(const nc of namedConfigs){
-        const gids=await resolveGroupIds(nc);
-        for(const gid of gids){const ids=await fetchGroupDomainIds(gid);ids.forEach(id=>namedIds.add(id));await sleep(200);}
-      }
-      domains=allDomains.filter(d=>!namedIds.has(d.id));
-      console.log(`Main: ${domains.length} domains (excluded ${namedIds.size})`);
+      for(const nc of namedConfigs){const gids=await resolveGroupIds(nc);gids.forEach(id=>namedGids.add(String(id)));}
+      domains=allDomains.filter(d=>!namedGids.has(String(d.group?.id)));
+      console.log(`Main: ${domains.length} domains (excluded group IDs: ${[...namedGids].join(',')})`);
     }else{
       const effectiveIds=await resolveGroupIds(cfg);
-      const reportIds=new Set();
-      for(const gid of effectiveIds){const ids=await fetchGroupDomainIds(gid);ids.forEach(id=>reportIds.add(id));await sleep(200);}
-      domains=allDomains.filter(d=>reportIds.has(d.id));
-      console.log(`${cfg.label}: ${domains.length} domains from groups [${effectiveIds.join(',')}]`);
+      const groupIdSet=new Set(effectiveIds.map(String));
+      domains=allDomains.filter(d=>groupIdSet.has(String(d.group?.id)));
+      console.log(`${cfg.label}: ${domains.length} domains in groups [${effectiveIds.join(',')}]`);
     }
     setReportStatus(`Found ${domains.length} domains. Fetching keywords...`,'');
     const today=new Date(),yesterday=new Date(today);yesterday.setDate(yesterday.getDate()-1);
