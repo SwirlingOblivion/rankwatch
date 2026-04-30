@@ -1,5 +1,3 @@
-export const config = { regions: ['ams1'] };
-
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -25,7 +23,7 @@ export default async function handler(req, res) {
         'Cache-Control': 'no-cache',
         'Pragma': 'no-cache',
       },
-      signal: AbortSignal.timeout(12000),
+      signal: (() => { const c = new AbortController(); setTimeout(() => c.abort(), 12000); return c.signal; })(),
     });
 
     if (!pageRes.ok) throw new Error(`HTTP ${pageRes.status}`);
