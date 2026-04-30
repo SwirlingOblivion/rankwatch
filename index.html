@@ -379,8 +379,9 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <div class="opp-header">
       <span class="settings-label">Ahrefs API Key</span>
       <input type="password" class="ahrefs-input" id="ahrefs-key-input" placeholder="Ahrefs API token..." autocomplete="off">
-      <button class="btn btn-orange" id="fetch-ahrefs-btn" onclick="fetchAhrefsData()">🔍 Fetch Opportunity Data</button>
-      <span class="ahrefs-status" id="ahrefs-status">Enter your Ahrefs API key and click Fetch</span>
+      <button class="btn btn-secondary" id="refresh-ar-btn" onclick="refreshAccuRankerOpps()">⚡ Refresh AccuRanker</button>
+      <button class="btn btn-orange" id="fetch-ahrefs-btn" onclick="fetchAhrefsData()">🔍 Refresh Ahrefs Data</button>
+      <span class="ahrefs-status" id="ahrefs-status">Enter your Ahrefs API key and click Refresh Ahrefs Data</span>
       <div class="spacer"></div>
       <span style="font-size:11px;color:var(--muted)">Rankings 1–50 · AI Vol from AccuRanker · KD + Vol from Ahrefs · Weighted score</span>
     </div>
@@ -726,38 +727,55 @@ function setOppFilter(f){
   renderOppTable();
 }
 function sortOpp(f){if(oppSortField===f)oppSortDir*=-1;else{oppSortField=f;oppSortDir=-1;}renderOppTable();}
+function buildOppData(ahMap){
+  const targetKws=allKeywords.filter(kw=>kw.rank!==null&&kw.rank>=1&&kw.rank<=50);
+  oppData=targetKws.map(kw=>{
+    const cc=(kw.country||'us').toLowerCase(),ah=ahMap[`\|\`]||{};
+    const kd=ah.kd??null,aiVolume=kw.search_volume||0,ahVolume=ah.volume||0,rank=kw.rank;
+    const score=calcScore(rank,aiVolume,ahVolume,kd),opportunity=rank<=3?'protect':rank<=10?'push':rank<=20?'quickwin':'build';
+    return{keyword:kw.keyword,domain:kw.domainName,domainId:kw.domainId,rank,aiVolume,ahVolume,kd,score,opportunity};
+  });
+  populateOppDomainFilter();renderOppStats();renderOppTable();
+}
+async function refreshAccuRankerOpps(){
+  const btn=document.getElementById('refresh-ar-btn');btn.disabled=true;btn.textContent='Refreshing...';
+  setAhrefsStatus('Refreshing AccuRanker rankings...','');
+  try{
+    await loadData(true);
+    const cached=await dbGet('ahrefs_kd');
+    buildOppData(cached?.ahMap||{});
+    const ahInfo=cached?`Ahrefs KD cached \`:'No Ahrefs KD - click Refresh Ahrefs Data to fetch';
+    setAhrefsStatus(`Rankings refreshed · \ opportunities · \`,'ok');
+  }catch(err){setAhrefsStatus(`Error: \`,'err');}    
+  finally{btn.disabled=false;btn.textContent='Refresh AccuRanker';}  
+}
 async function fetchAhrefsData(){
   const key=document.getElementById('ahrefs-key-input').value.trim();
   if(!key){setAhrefsStatus('Please enter your Ahrefs API key','err');return;}
-  const btn=document.getElementById('fetch-ahrefs-btn');btn.disabled=true;btn.textContent='⏳ Fetching...';
+  const btn=document.getElementById('fetch-ahrefs-btn');btn.disabled=true;btn.textContent='Fetching...';
   const targetKws=allKeywords.filter(kw=>kw.rank!==null&&kw.rank>=1&&kw.rank<=50);
-  setAhrefsStatus(`Found ${targetKws.length} keywords ranking 1–50. Fetching from Ahrefs...`,'');
+  setAhrefsStatus(`Found \ keywords ranking 1-50. Fetching from Ahrefs...`,'');
   try{
     const byCountry={};targetKws.forEach(kw=>{const cc=(kw.country||'us').toLowerCase();if(!byCountry[cc])byCountry[cc]=new Set();byCountry[cc].add(kw.keyword);});
     let ahMap={};const countries=Object.keys(byCountry);let done=0;
     for(const cc of countries){
       const kwList=[...byCountry[cc]],batches=chunk(kwList,100);
       for(let i=0;i<batches.length;i++){
-        done++;setAhrefsStatus(`Fetching from Ahrefs... ${done} batches (${cc.toUpperCase()})`,'');
-        const res=await fetch(`/api/proxy?ahrefs=1&keywords=${encodeURIComponent(batches[i].join(','))}&country=${cc}`,{headers:{'Authorization':`Bearer ${key}`}});
+        done++;setAhrefsStatus(`Fetching from Ahrefs... \ batches (\)`,'');
+        const res=await fetch(`/api/proxy?ahrefs=1&keywords=\&country=\`,{headers:{'Authorization':`Bearer \`}});
         const data=await res.json();
         if(data.error)throw new Error(data.error);
-        if(data.keywords)data.keywords.forEach(kw=>{ahMap[`${kw.keyword.toLowerCase()}|${cc}`]={kd:kw.difficulty??null,volume:kw.volume||0};});
+        if(data.keywords)data.keywords.forEach(kw=>{ahMap[`\|\`]={kd:kw.difficulty??null,volume:kw.volume||0};});
         if(i<batches.length-1)await sleep(500);
       }
       await sleep(300);
     }
-    oppData=targetKws.map(kw=>{
-      const cc=(kw.country||'us').toLowerCase(),ah=ahMap[`${kw.keyword.toLowerCase()}|${cc}`]||{};
-      const kd=ah.kd??null,aiVolume=kw.search_volume||0,ahVolume=ah.volume||0,rank=kw.rank;
-      const score=calcScore(rank,aiVolume,ahVolume,kd),opportunity=rank<=3?'protect':rank<=10?'push':rank<=20?'quickwin':'build';
-      return{keyword:kw.keyword,domain:kw.domainName,domainId:kw.domainId,rank,aiVolume,ahVolume,kd,score,opportunity};
-    });
-    await dbSet('ahrefs',{ts:Date.now(),data:oppData});localStorage.setItem('ar_ahrefs_key',key);
-    setAhrefsStatus(`\u2713 Loaded ${oppData.length} opportunities \u00b7 KD for ${oppData.filter(o=>o.kd!==null).length} keywords`,'ok');
-    populateOppDomainFilter();renderOppStats();renderOppTable();
-  }catch(err){setAhrefsStatus(`Error: ${err.message}`,'err');console.error(err);}
-  finally{btn.disabled=false;btn.textContent='\uD83D\uDD0D Fetch Opportunity Data';}
+    await dbSet('ahrefs_kd',{ts:Date.now(),ahMap});
+    localStorage.setItem('ar_ahrefs_key',key);
+    buildOppData(ahMap);
+    setAhrefsStatus(`Loaded \ opportunities · KD for \ keywords`,'ok');
+  }catch(err){setAhrefsStatus(`Error: \`,'err');console.error(err);}
+  finally{btn.disabled=false;btn.textContent='Refresh Ahrefs Data';}
 }
 function populateOppDomainFilter(){const sel=document.getElementById('opp-domain-filter'),cur=sel.value;sel.innerHTML='<option value="all">All Domains</option>';[...new Set(oppData.map(o=>o.domainId))].forEach(id=>{const name=oppData.find(o=>o.domainId===id)?.domain||id;const o=document.createElement('option');o.value=id;o.textContent=name;sel.appendChild(o);});sel.value=cur;}
 function renderOppStats(){['protect','push','quickwin','build'].forEach(t=>{document.getElementById(`opp-stat-${t}`).textContent=oppData.filter(o=>o.opportunity===t).length;});}
@@ -1081,7 +1099,7 @@ function submitPasswordChange(){
 function switchTab(tab){
   ['keywords','sites','opportunities','reports'].forEach(t=>{document.getElementById(`tab-${t}`).classList.toggle('active',t===tab);document.getElementById(`tab-btn-${t}`).classList.toggle('active',t===tab);});
   if(tab==='sites'&&sitesData.length===0&&allKeywords.length>0)buildSitesData();
-  if(tab==='opportunities'){const k=localStorage.getItem('ar_ahrefs_key');if(k)document.getElementById('ahrefs-key-input').value=k;if(oppData.length===0)dbGet('ahrefs').then(c=>{if(c?.data){oppData=c.data;setAhrefsStatus(`Cached (${getCacheAge(c.ts)}) \u2014 click Fetch to refresh`,'ok');populateOppDomainFilter();renderOppStats();renderOppTable();}});}
+  if(tab==='opportunities'){const k=localStorage.getItem('ar_ahrefs_key');if(k)document.getElementById('ahrefs-key-input').value=k;if(oppData.length===0)dbGet('ahrefs_kd').then(c=>{if(c?.ahMap&&allKeywords.length>0){buildOppData(c.ahMap);setAhrefsStatus(`Ahrefs KD cached ${getCacheAge(c.ts)} \u2014 Refresh AccuRanker for fresh rankings`,'ok');}});}
   if(tab==='reports')loadChartJS().then(()=>loadCachedReport(activeReport));
 }
 function loadChartJS(){if(window.Chart)return Promise.resolve();return new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});}
