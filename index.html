@@ -538,28 +538,25 @@ let _groupNameCache=null;
 async function discoverGroupsByName(){
   if(_groupNameCache)return _groupNameCache;
   const map={};
-  try{
-    let next='/api/v4/groups/?page_size=100';
-    let firstPage=true;
-    while(next){
-      const data=await arFetch(next);
-      const results=data.results||(Array.isArray(data)?data:[]);
-      if(firstPage){
-        firstPage=false;
-        const sample=results[0]||data;
-        console.log('AccuRanker groups raw sample:',JSON.stringify(sample).substring(0,400));
-        console.log('AccuRanker groups count:',results.length,'total/count:',data.count);
-      }
-      results.forEach(g=>{
-        const name=g.name||g.group_name||g.title||g.label;
-        const id=g.id||g.group_id||g.pk;
-        if(name&&id)map[String(name).trim()]=String(id);
-      });
-      next=data.next?data.next.replace('https://app.accuranker.com',''):null;
-      if(next)await sleep(200);
-    }
-    console.log('AccuRanker groups discovered:',map);
-  }catch(e){console.warn('Groups list endpoint failed:',e.message);}
+  const endpoints=['/api/v4/groups/?page_size=100','/api/v4/domain-groups/?page_size=100','/api/v4/group/?page_size=100'];
+  for(const ep of endpoints){
+    try{
+      const data=await arFetch(ep);
+      if(data&&!data.error){
+        const results=data.results||(Array.isArray(data)?data:[]);
+        if(results.length>0){
+          console.log(`Groups found at ${ep}, first item:`,JSON.stringify(results[0]).substring(0,300));
+          results.forEach(g=>{
+            const name=g.name||g.group_name||g.title||g.label;
+            const id=g.id||g.group_id||g.pk;
+            if(name&&id)map[String(name).trim()]=String(id);
+          });
+          break;
+        }else{console.log(`${ep} returned empty results`);}
+      }else{console.log(`${ep} returned error:`,data?.error?.substring?.(0,80));}
+    }catch(e){console.warn(`${ep} failed:`,e.message);}
+  }
+  console.log('AccuRanker groups discovered:',map);
   _groupNameCache=map;
   return map;
 }
@@ -944,8 +941,9 @@ async function extractReport(){
   const btn=document.getElementById('extract-btn');btn.disabled=true;btn.textContent='\u23F3 Extracting...';
   const cfg=REPORT_CONFIGS[activeReport];setReportStatus(`Identifying domains for ${cfg.label}...`,'');
   try{
-    let allDomains=[],nextUrl='/api/v4/domains/?fields=id,domain,display_name&page_size=100';
+    let allDomains=[],nextUrl='/api/v4/domains/?page_size=100';
     while(nextUrl){const data=await arFetch(nextUrl);allDomains=allDomains.concat(data.results||data);nextUrl=data.next?data.next.replace('https://app.accuranker.com',''):null;if(nextUrl)await sleep(300);}
+    if(allDomains.length>0)console.log('Domain fields:',Object.keys(allDomains[0]),'sample:',JSON.stringify(allDomains[0]).substring(0,400));
     let domains=[];
     _groupNameCache=null; // reset discovery cache each extract
     if(cfg.groupIds===null){
