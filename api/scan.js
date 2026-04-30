@@ -14,17 +14,27 @@ export default async function handler(req, res) {
   const langMap = { NL: 'nl', DE: 'de', IT: 'it', ES: 'es', EN: 'en', FR: 'fr', SE: 'sv', NO: 'no', FI: 'fi' };
   const lang = langMap[geo] || 'en';
 
+  const scraperKey = process.env.SCRAPER_API_KEY;
+
   try {
-    const pageRes = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-        'Accept-Language': `${lang}-${geo},${lang};q=0.9,en;q=0.8`,
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache',
-      },
-      signal: (() => { const c = new AbortController(); setTimeout(() => c.abort(), 12000); return c.signal; })(),
-    });
+    const scraperUrl = scraperKey
+      ? `http://api.scraperapi.com?api_key=${scraperKey}&url=${encodeURIComponent(url)}&country_code=${lang}&render=false`
+      : url;
+
+    const fetchOptions = scraperKey
+      ? { signal: (() => { const c = new AbortController(); setTimeout(() => c.abort(), 30000); return c.signal; })() }
+      : {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            'Accept-Language': `${lang}-${geo},${lang};q=0.9,en;q=0.8`,
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache',
+          },
+          signal: (() => { const c = new AbortController(); setTimeout(() => c.abort(), 12000); return c.signal; })(),
+        };
+
+    const pageRes = await fetch(scraperUrl, fetchOptions);
 
     if (!pageRes.ok) throw new Error(`HTTP ${pageRes.status}`);
     const html = await pageRes.text();
