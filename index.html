@@ -540,10 +540,21 @@ async function discoverGroupsByName(){
   const map={};
   try{
     let next='/api/v4/groups/?page_size=100';
+    let firstPage=true;
     while(next){
       const data=await arFetch(next);
       const results=data.results||(Array.isArray(data)?data:[]);
-      results.forEach(g=>{if(g.name&&g.id)map[g.name]=String(g.id);});
+      if(firstPage){
+        firstPage=false;
+        const sample=results[0]||data;
+        console.log('AccuRanker groups raw sample:',JSON.stringify(sample).substring(0,400));
+        console.log('AccuRanker groups count:',results.length,'total/count:',data.count);
+      }
+      results.forEach(g=>{
+        const name=g.name||g.group_name||g.title||g.label;
+        const id=g.id||g.group_id||g.pk;
+        if(name&&id)map[String(name).trim()]=String(id);
+      });
       next=data.next?data.next.replace('https://app.accuranker.com',''):null;
       if(next)await sleep(200);
     }
@@ -553,10 +564,9 @@ async function discoverGroupsByName(){
   return map;
 }
 async function resolveGroupIds(cfg){
-  // Try name-based discovery first (most reliable — not dependent on hardcoded IDs)
   if(cfg.groupNames){
     const map=await discoverGroupsByName();
-    const resolved=cfg.groupNames.map(n=>map[n]).filter(Boolean);
+    const resolved=cfg.groupNames.map(n=>map[String(n).trim()]).filter(Boolean);
     if(resolved.length>0){console.log(`Resolved group IDs for ${cfg.label} via names:`,resolved);return resolved;}
     console.warn(`Name-based resolution failed for ${cfg.label}, falling back to hardcoded IDs`);
   }
@@ -564,9 +574,9 @@ async function resolveGroupIds(cfg){
 }
 async function fetchGroupDomainIds(groupId){
   const ids=new Set();
-  // Try /api/v4/groups/{id}/domains/
+  // Primary: ?group_id= filter with full pagination
   try{
-    let next=`/api/v4/groups/${groupId}/domains/?fields=id&page_size=100`;
+    let next=`/api/v4/domains/?fields=id&group_id=${groupId}&page_size=100`;
     let attempts=0;
     while(next&&attempts<20){
       attempts++;
@@ -577,13 +587,22 @@ async function fetchGroupDomainIds(groupId){
       if(next)await sleep(200);
       if(results.length===0)break;
     }
-  }catch(e){console.warn(`/groups/${groupId}/domains/ failed:`,e.message);}
-  // Fallback: ?group_id= filter on domains endpoint
+  }catch(e){console.warn(`group_id filter failed for ${groupId}:`,e.message);}
+  // Fallback: /api/v4/groups/{id}/domains/
   if(ids.size===0){
     try{
-      const data=await arFetch(`/api/v4/domains/?fields=id&group_id=${groupId}&page_size=500`);
-      (data.results||(Array.isArray(data)?data:[])).forEach(d=>ids.add(d.id));
-    }catch(e2){console.warn(`group_id fallback for ${groupId} failed:`,e2.message);}
+      let next=`/api/v4/groups/${groupId}/domains/?fields=id&page_size=100`;
+      let attempts=0;
+      while(next&&attempts<20){
+        attempts++;
+        const data=await arFetch(next);
+        const results=data.results||(Array.isArray(data)?data:[]);
+        results.forEach(d=>ids.add(d.id));
+        next=data.next?data.next.replace('https://app.accuranker.com',''):null;
+        if(next)await sleep(200);
+        if(results.length===0)break;
+      }
+    }catch(e2){console.warn(`/groups/${groupId}/domains/ failed:`,e2.message);}
   }
   console.log(`Group ${groupId}: ${ids.size} domain IDs`);
   return ids;
