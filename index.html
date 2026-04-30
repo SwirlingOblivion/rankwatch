@@ -984,7 +984,7 @@ function renderCharts(snaps){
   const labels=snaps.map(s=>s.week),pp=s=>parseFloat(s)||0;
   const pctOpts=()=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#e8e8f0',font:{family:'Syne'}}}},scales:{x:{ticks:{color:'#6b6b8a',maxTicksLimit:12},grid:{color:'rgba(255,255,255,.05)'}},y:{ticks:{color:'#6b6b8a',callback:v=>v+'%'},grid:{color:'rgba(255,255,255,.05)'}}}});
   const cntOpts=()=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#e8e8f0',font:{family:'Syne'}}}},scales:{x:{ticks:{color:'#6b6b8a',maxTicksLimit:12},grid:{color:'rgba(255,255,255,.05)'}},y:{ticks:{color:'#6b6b8a'},grid:{color:'rgba(255,255,255,.05)'}}}});
-  chartCounts=new Chart(document.getElementById('chart-counts').getContext('2d'),{type:'line',data:{labels,datasets:[{label:'# Top 3',data:snaps.map(s=>s.top3||0),borderColor:'#ffc84a',tension:.3,fill:false,pointRadius:2},{label:'# Top 4–10',data:snaps.map(s=>Math.max(0,(s.top10||0)-(s.top3||0))),borderColor:'#7c6aff',tension:.3,fill:false,pointRadius:2}]},options:cntOpts()});
+  chartCounts=new Chart(document.getElementById('chart-counts').getContext('2d'),{type:'line',data:{labels,datasets:[{label:'# Top 3',data:snaps.map(s=>s.top3||0),borderColor:'#ffc84a',tension:.3,fill:false,pointRadius:2},{label:'# Top 4–10',data:snaps.map(s=>s.top10||0),borderColor:'#7c6aff',tension:.3,fill:false,pointRadius:2}]},options:cntOpts()});
   chartDist=new Chart(document.getElementById('chart-dist').getContext('2d'),{type:'line',data:{labels,datasets:[{label:'% Top 3',data:snaps.map(s=>pp(s.pct3)),borderColor:'#ffc84a',tension:.3,fill:false,pointRadius:2},{label:'% Top 10',data:snaps.map(s=>pp(s.pct10)),borderColor:'#7c6aff',tension:.3,fill:false,pointRadius:2},{label:'% Top 100',data:snaps.map(s=>pp(s.pct100)),borderColor:'#3d9fff',tension:.3,fill:false,pointRadius:2}]},options:pctOpts()});
   chartCumul=new Chart(document.getElementById('chart-cumul').getContext('2d'),{type:'line',data:{labels,datasets:[{label:'% Top 10 Cum.',data:snaps.map(s=>pp(s.pct10cum)),borderColor:'#7c6aff',tension:.3,fill:false,pointRadius:2},{label:'% Top 100 Cum.',data:snaps.map(s=>pp(s.pct100cum)),borderColor:'#3d9fff',tension:.3,fill:false,pointRadius:2}]},options:pctOpts()});
 }
@@ -1053,7 +1053,7 @@ async function exportReportPDF(){
   chk(70);sh(12,true,40,40,60);doc.text('Ranking Site Counts Over Time',M,y);y+=5;
   if(snaps.length>1){
     const cH=50,cW=CW,n=snaps.length;
-    const t3v=snaps.map(s=>s.top3||0),t410v=snaps.map(s=>Math.max(0,(s.top10||0)-(s.top3||0)));
+    const t3v=snaps.map(s=>s.top3||0),t410v=snaps.map(s=>s.top10||0);
     const allCV=[...t3v,...t410v],minCV=Math.min(...allCV),maxCV=Math.max(...allCV),cRng=maxCV-minCV||1;
     fi(M,y,cW,cH,248,248,255);doc.setDrawColor(200,200,220);doc.setLineWidth(0.2);doc.rect(M,y,cW,cH,'S');
     [0,0.5,1].forEach(f=>{const val=Math.round(minCV+f*cRng),gy=y+cH-f*cH;doc.setDrawColor(220,220,230);doc.setLineWidth(0.15);doc.line(M,gy,M+cW,gy);sh(6,false,160,160,180);doc.text(String(val),M-2,gy+1,{align:'right'});});
