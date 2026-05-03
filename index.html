@@ -1142,7 +1142,12 @@ function loadScript(src){if(document.querySelector(`script[src="${src}"]`))retur
 function simpleHash(str){let h=0x811c9dc5;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=(h*0x01000193)>>>0;}return h.toString(16);}
 const DEFAULT_PW_HASH=simpleHash('moneymaker2024');
 function getPwHash(){return localStorage.getItem('ar_pw_hash')||DEFAULT_PW_HASH;}
-function checkPasswordGate(){if(localStorage.getItem('ar_auth')==='ok')return true;showLoginPrompt();return false;}
+// INACTIVITY LOGOUT
+let _inactivityTimer=null;
+function startInactivityTimer(){clearTimeout(_inactivityTimer);_inactivityTimer=setTimeout(()=>{localStorage.removeItem('ar_auth');showLoginPrompt('Logged out due to 15 minutes of inactivity.');},15*60*1000);}
+function resetInactivityTimer(){if(localStorage.getItem('ar_auth')==='ok')startInactivityTimer();}
+['mousemove','mousedown','keypress','touchstart','scroll','click'].forEach(e=>document.addEventListener(e,resetInactivityTimer,{passive:true}));
+function checkPasswordGate(){if(localStorage.getItem('ar_auth')==='ok'){startInactivityTimer();return true;}showLoginPrompt();return false;}
 function showLoginPrompt(msg=''){
   document.getElementById('pw-overlay')?.remove();
   const o=document.createElement('div');o.id='pw-overlay';
@@ -1151,7 +1156,7 @@ function showLoginPrompt(msg=''){
   document.body.appendChild(o);
   document.getElementById('pw-input').addEventListener('keydown',e=>{if(e.key==='Enter')submitPassword();});
 }
-function submitPassword(){const input=document.getElementById('pw-input').value;if(simpleHash(input)===getPwHash()){localStorage.setItem('ar_auth','ok');document.getElementById('pw-overlay')?.remove();if(apiKey){if(allKeywords.length>0)showDashboard();else{showLoading();loadData();}}}else showLoginPrompt('Incorrect password. Please try again.');}
+function submitPassword(){const input=document.getElementById('pw-input').value;if(simpleHash(input)===getPwHash()){localStorage.setItem('ar_auth','ok');startInactivityTimer();document.getElementById('pw-overlay')?.remove();if(apiKey){if(allKeywords.length>0)showDashboard();else{showLoading();loadData();}}}else showLoginPrompt('Incorrect password. Please try again.');}
 function showChangePassword(){
   document.getElementById('pw-overlay')?.remove();
   const o=document.createElement('div');o.id='pw-overlay';
