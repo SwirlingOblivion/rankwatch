@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Money Maker</title>
+<title>Node Reporting</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0a0a0f;--surface:#111118;--surface2:#1a1a24;--border:#2a2a3a;--text:#e8e8f0;--muted:#6b6b8a;--accent:#7c6aff;--up:#3dffa0;--down:#ff5c5c;--gold:#ffc84a;--top3:#ffc84a;--top10:#7c6aff;--top20:#3d9fff}
@@ -234,7 +234,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
 </head>
 <body>
 <header>
-  <div class="logo"><div class="logo-dot"></div>The Money Maker</div>
+  <div class="logo"><div class="logo-dot"></div>Node Reporting</div>
   <div class="header-right">
     <span class="last-updated" id="last-updated">—</span>
     <button class="btn" id="refresh-btn" onclick="loadData(true)" style="display:none"><span class="ri">↻</span> Refresh</button>
@@ -1051,7 +1051,7 @@ async function exportReportPDF(){
   const chk=(n=20)=>{if(y+n>282){doc.addPage();y=M;}};
   fi(0,0,W,36,248,246,255);doc.setFillColor(124,106,255);doc.rect(0,0,4,36,'F');
   doc.setDrawColor(124,106,255);doc.setLineWidth(0.5);doc.line(0,36,W,36);
-  sh(20,true,60,40,120);doc.text('The Money Maker',M+6,15);
+  sh(20,true,60,40,120);doc.text('Node Reporting',M+6,15);
   sh(11,false,100,80,160);doc.text(`${cfg.label} Report`,M+6,24);
   sh(9,false,150,140,170);doc.text(`Generated: ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}`,W-M,24,{align:'right'});
   doc.text(`Latest: ${latest.week}`,W-M,31,{align:'right'});y=46;
@@ -1095,8 +1095,8 @@ async function exportReportPDF(){
   sh(7.5,true,60,50,150);doc.text('Domain',M+2,y+5.5);doc.text('Market',M+110,y+5.5);doc.text('Position',M+150,y+5.5);y+=9;
   (data.currentStatus||[]).filter(s=>s.bucket==='Top 3').sort((a,b)=>a.position-b.position).slice(0,25).forEach((s,idx)=>{chk(8);if(idx%2===0)fi(M,y,CW,7,245,245,250);doc.setDrawColor(220,220,225);doc.rect(M,y,CW,7,'S');sh(7.5,false,50,50,70);doc.text(s.domain.substring(0,55),M+2,y+5);sh(7.5,false,100,100,130);doc.text(s.market,M+110,y+5);sh(7.5,true,160,100,0);doc.text('#'+s.position,M+150,y+5);y+=7;});
   const pages=doc.internal.getNumberOfPages();
-  for(let i=1;i<=pages;i++){doc.setPage(i);fi(0,288,W,9,248,246,255);doc.setDrawColor(200,195,230);doc.line(0,288,W,288);sh(7.5,false,120,110,160);doc.text(`The Money Maker \u00b7 ${cfg.label} Report \u00b7 Page ${i} of ${pages}`,W/2,294,{align:'center'});}
-  doc.save(`money-maker-${activeReport}-${fmt(new Date())}.pdf`);
+  for(let i=1;i<=pages;i++){doc.setPage(i);fi(0,288,W,9,248,246,255);doc.setDrawColor(200,195,230);doc.line(0,288,W,288);sh(7.5,false,120,110,160);doc.text(`Node Reporting \u00b7 ${cfg.label} Report \u00b7 Page ${i} of ${pages}`,W/2,294,{align:'center'});}
+  doc.save(`node-reporting-${activeReport}-${fmt(new Date())}.pdf`);
   btn.disabled=false;btn.textContent='\uD83D\uDCC4 Export PDF';
 }
 function loadScript(src){if(document.querySelector(`script[src="${src}"]`))return Promise.resolve();return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s);});}
@@ -1115,7 +1115,7 @@ function showLoginPrompt(msg=''){
   document.getElementById('pw-overlay')?.remove();
   const o=document.createElement('div');o.id='pw-overlay';
   o.style.cssText='position:fixed;inset:0;background:#0a0a0f;display:flex;align-items:center;justify-content:center;z-index:9999;font-family:Syne,sans-serif';
-  o.innerHTML=`<div style="background:#111118;border:1px solid #2a2a3a;border-radius:20px;padding:48px;max-width:400px;width:90%;position:relative;overflow:hidden"><div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#7c6aff,#b06aff,#ffc84a)"></div><div style="font-size:24px;font-weight:800;margin-bottom:8px">\uD83D\uDD10 The Money Maker</div><div style="color:#6b6b8a;font-size:14px;margin-bottom:28px">Enter password to access</div>${msg?`<div style="color:#ff5c5c;font-size:13px;margin-bottom:16px;padding:10px;background:rgba(255,92,92,.1);border-radius:8px">${msg}</div>`:''}<input type="password" id="pw-input" placeholder="Password" autofocus style="width:100%;background:#0a0a0f;border:1px solid #2a2a3a;border-radius:10px;padding:14px 16px;font-family:JetBrains Mono,monospace;font-size:13px;color:#e8e8f0;outline:none;margin-bottom:16px;box-sizing:border-box"><button onclick="submitPassword()" style="width:100%;background:#7c6aff;color:#fff;border:none;border-radius:10px;padding:14px;font-family:Syne,sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:12px">Access Dashboard</button><button onclick="showChangePassword()" style="width:100%;background:none;color:#6b6b8a;border:1px solid #2a2a3a;border-radius:10px;padding:10px;font-family:Syne,sans-serif;font-size:13px;cursor:pointer">Forgot / Change Password</button></div>`;
+  o.innerHTML=`<div style="background:#111118;border:1px solid #2a2a3a;border-radius:20px;padding:48px;max-width:400px;width:90%;position:relative;overflow:hidden"><div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#7c6aff,#b06aff,#ffc84a)"></div><div style="font-size:24px;font-weight:800;margin-bottom:8px">\uD83D\uDD10 Node Reporting</div><div style="color:#6b6b8a;font-size:14px;margin-bottom:28px">Enter password to access</div>${msg?`<div style="color:#ff5c5c;font-size:13px;margin-bottom:16px;padding:10px;background:rgba(255,92,92,.1);border-radius:8px">${msg}</div>`:''}<input type="password" id="pw-input" placeholder="Password" autofocus style="width:100%;background:#0a0a0f;border:1px solid #2a2a3a;border-radius:10px;padding:14px 16px;font-family:JetBrains Mono,monospace;font-size:13px;color:#e8e8f0;outline:none;margin-bottom:16px;box-sizing:border-box"><button onclick="submitPassword()" style="width:100%;background:#7c6aff;color:#fff;border:none;border-radius:10px;padding:14px;font-family:Syne,sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:12px">Access Dashboard</button><button onclick="showChangePassword()" style="width:100%;background:none;color:#6b6b8a;border:1px solid #2a2a3a;border-radius:10px;padding:10px;font-family:Syne,sans-serif;font-size:13px;cursor:pointer">Forgot / Change Password</button></div>`;
   document.body.appendChild(o);
   document.getElementById('pw-input').addEventListener('keydown',e=>{if(e.key==='Enter')submitPassword();});
 }
