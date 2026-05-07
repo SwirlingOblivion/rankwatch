@@ -1188,8 +1188,9 @@ function showLoading(){
   document.getElementById('loading-screen').style.display='none';
   const bar=document.getElementById('loading-bar');bar.style.display='flex';
   document.getElementById('lb-fill').style.width='0%';
-  if(document.getElementById('dashboard').style.display==='none'){
-    document.getElementById('dashboard').style.display='block';
+  const dash=document.getElementById('dashboard');
+  if(getComputedStyle(dash).display==='none'){
+    dash.style.display='block';
     document.getElementById('refresh-btn').style.display='flex';
     document.getElementById('key-display').textContent=apiKey.substring(0,6)+'\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'+apiKey.slice(-4);
     addLockBtn();
