@@ -17,6 +17,11 @@ header{position:sticky;top:0;z-index:100;background:rgba(10,10,15,.85);backdrop-
 .logo-dot{width:10px;height:10px;background:var(--accent);border-radius:50%;box-shadow:0 0 12px var(--accent);animation:pulse 2s infinite}
 .header-right{display:flex;align-items:center;gap:12px}
 .last-updated{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)}
+#loading-bar{display:none;position:fixed;top:64px;left:0;right:0;z-index:200;background:rgba(10,10,15,.95);padding:10px 32px;border-bottom:1px solid var(--border);align-items:center;gap:14px}
+#loading-bar .lb-text{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);flex:1}
+#loading-bar .lb-track{flex:1;height:3px;background:var(--surface2);border-radius:2px;overflow:hidden;max-width:400px}
+#loading-bar .lb-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .3s;width:0%}
+@keyframes lb-pulse{0%,100%{opacity:.5}50%{opacity:1}}
 .btn{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 16px;border-radius:8px;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:8px}
 .btn:hover{border-color:var(--accent);color:var(--accent)}
 .btn:disabled{opacity:.4;cursor:not-allowed}
@@ -243,6 +248,10 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <button class="btn" id="refresh-btn" onclick="loadData(true)" style="display:none"><span class="ri">↻</span> Refresh</button>
   </div>
 </header>
+<div id="loading-bar">
+  <div class="lb-text" id="lb-text">Loading...</div>
+  <div class="lb-track"><div class="lb-fill" id="lb-fill"></div></div>
+</div>
 <div id="setup-screen">
   <div class="setup-card">
     <div class="setup-title">Connect AccuRanker</div>
@@ -557,8 +566,8 @@ function resetKey(){localStorage.removeItem('ar_api_key');apiKey='';allKeywords=
 
 // DATA LOADING
 window.addEventListener('DOMContentLoaded',()=>{
-  if(apiKey){showLoading();loadData();}
   const qk=localStorage.getItem('ar_queue_key');if(qk){const el=document.getElementById('queue-key-input');if(el)el.value=qk;}
+  if(apiKey){showLoading();loadData();}
 });
 async function loadData(forceRefresh=false){
   const btn=document.getElementById('refresh-btn');btn.classList.add('spinning');btn.disabled=true;
@@ -1174,9 +1183,32 @@ function switchTab(tab){
   if(tab==='reports')loadChartJS().then(()=>loadCachedReport(activeReport));
 }
 function loadChartJS(){if(window.Chart)return Promise.resolve();return new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});}
-function showLoading(){document.getElementById('setup-screen').style.display='none';document.getElementById('dashboard').style.display='none';document.getElementById('loading-screen').style.display='flex';}
-function setLoadingText(t){document.getElementById('loading-text').textContent=t;}
-function showDashboard(){document.getElementById('loading-screen').style.display='none';document.getElementById('dashboard').style.display='block';document.getElementById('refresh-btn').style.display='flex';document.getElementById('key-display').textContent=apiKey.substring(0,6)+'\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'+apiKey.slice(-4);addLockBtn();}
+function showLoading(){
+  document.getElementById('setup-screen').style.display='none';
+  document.getElementById('loading-screen').style.display='none';
+  const bar=document.getElementById('loading-bar');bar.style.display='flex';
+  document.getElementById('lb-fill').style.width='0%';
+  if(document.getElementById('dashboard').style.display==='none'){
+    document.getElementById('dashboard').style.display='block';
+    document.getElementById('refresh-btn').style.display='flex';
+    document.getElementById('key-display').textContent=apiKey.substring(0,6)+'\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'+apiKey.slice(-4);
+    addLockBtn();
+  }
+}
+function setLoadingText(t){
+  document.getElementById('loading-text').textContent=t;
+  document.getElementById('lb-text').textContent=t;
+  const m=t.match(/(\d+)\/(\d+)/);
+  if(m){const pct=Math.round(parseInt(m[1])/parseInt(m[2])*100);document.getElementById('lb-fill').style.width=pct+'%';}
+}
+function showDashboard(){
+  document.getElementById('loading-screen').style.display='none';
+  document.getElementById('loading-bar').style.display='none';
+  document.getElementById('dashboard').style.display='block';
+  document.getElementById('refresh-btn').style.display='flex';
+  document.getElementById('key-display').textContent=apiKey.substring(0,6)+'\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'+apiKey.slice(-4);
+  addLockBtn();
+}
 function showSetup(){document.getElementById('loading-screen').style.display='none';document.getElementById('setup-screen').style.display='flex';}
 function showError(msg){const el=document.getElementById('error-msg');el.textContent=msg;el.style.display='block';document.getElementById('loading-screen').style.display='none';document.getElementById('setup-screen').style.display='flex';}
 function addLockBtn(){if(document.getElementById('lock-btn'))return;const btn=document.createElement('button');btn.id='lock-btn';btn.className='btn';btn.textContent='\uD83D\uDD10 Lock';btn.onclick=()=>{localStorage.removeItem('ar_auth');location.reload();};document.querySelector('.header-right').prepend(btn);}
