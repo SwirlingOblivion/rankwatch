@@ -184,10 +184,13 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .ahrefs-input::placeholder{color:var(--muted)}
 .ahrefs-status{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace}
 .ahrefs-status.ok{color:var(--up)} .ahrefs-status.err{color:var(--down)}
-.opp-row{display:grid;grid-template-columns:1fr 120px 60px 90px 90px 70px 80px 110px;align-items:center;padding:13px 24px;border-bottom:1px solid rgba(255,255,255,.04);transition:background .15s;gap:10px}
+.opp-row{display:grid;grid-template-columns:1fr 120px 60px 90px 90px 70px 80px 110px 88px;align-items:center;padding:13px 24px;border-bottom:1px solid rgba(255,255,255,.04);transition:background .15s;gap:10px}
 .opp-row:hover{background:rgba(255,255,255,.02)}
 .opp-row:last-child{border-bottom:none}
-.opp-row-header{display:grid;grid-template-columns:1fr 120px 60px 90px 90px 70px 80px 110px;align-items:center;padding:11px 24px;gap:10px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);cursor:pointer;user-select:none}
+.opp-row-header{display:grid;grid-template-columns:1fr 120px 60px 90px 90px 70px 80px 110px 88px;align-items:center;padding:11px 24px;gap:10px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);cursor:pointer;user-select:none}
+.queue-btn{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:5px 9px;border-radius:6px;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap;width:100%}
+.queue-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.queue-btn.queued{color:var(--up);border-color:rgba(61,255,160,.4);cursor:default}
 .opp-row-header span:hover{color:var(--text)}
 .opp-label{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:100px;font-size:11px;font-weight:700;white-space:nowrap}
 .opp-protect{background:rgba(255,200,74,.15);color:var(--top3)}
@@ -383,7 +386,8 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <button class="btn btn-orange" id="fetch-ahrefs-btn" onclick="fetchAhrefsData()">🔍 Refresh Ahrefs Data</button>
       <span class="ahrefs-status" id="ahrefs-status">Enter your Ahrefs API key and click Refresh Ahrefs Data</span>
       <div class="spacer"></div>
-      <span style="font-size:11px;color:var(--muted)">Rankings 1–50 · AI Vol from AccuRanker · KD + Vol from Ahrefs · Weighted score</span>
+      <span class="settings-label">CA Queue Key</span>
+      <input type="password" class="ahrefs-input" id="queue-key-input" placeholder="Content queue API key..." autocomplete="off" style="width:200px" oninput="localStorage.setItem('ar_queue_key',this.value)">
     </div>
     <div class="stats-row">
       <div class="stat-card gold"><div class="stat-label">🏆 Protect</div><div class="stat-value" id="opp-stat-protect">—</div></div>
@@ -411,6 +415,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <span onclick="sortOpp('kd')" style="text-align:center">KD ↕</span>
         <span onclick="sortOpp('score')" style="text-align:center;color:var(--accent)">Score ↕</span>
         <span>Opportunity</span>
+        <span>Queue</span>
       </div>
       <div id="opp-table-body"><div class="empty-panel" style="padding:60px"><div class="empty-icon">🔍</div>Enter your Ahrefs API key above and click Fetch Opportunity Data</div></div>
       <div class="pagination"><span id="opp-pagination-info">—</span><div class="page-btns" id="opp-page-btns"></div></div>
@@ -551,7 +556,10 @@ function connect(){const v=document.getElementById('api-key-input').value.trim()
 function resetKey(){localStorage.removeItem('ar_api_key');apiKey='';allKeywords=[];dbDel('main');document.getElementById('dashboard').style.display='none';document.getElementById('refresh-btn').style.display='none';document.getElementById('setup-screen').style.display='flex';document.getElementById('api-key-input').value='';document.getElementById('error-msg').style.display='none';}
 
 // DATA LOADING
-window.addEventListener('DOMContentLoaded',()=>{if(apiKey){showLoading();loadData();}});
+window.addEventListener('DOMContentLoaded',()=>{
+  if(apiKey){showLoading();loadData();}
+  const qk=localStorage.getItem('ar_queue_key');if(qk){const el=document.getElementById('queue-key-input');if(el)el.value=qk;}
+});
 async function loadData(forceRefresh=false){
   const btn=document.getElementById('refresh-btn');btn.classList.add('spinning');btn.disabled=true;
   if(!forceRefresh){
@@ -589,7 +597,7 @@ async function fetchKwsForDomain(domain,retries=3){
     const kws=data.results||data;
     return kws.map(kw=>{
       const ranks=kw.ranks||[],sv=kw.search_volume||{};
-      return{id:kw.id,keyword:kw.keyword,rank:ranks.length>0?ranks[ranks.length-1].rank:null,rank_compare:ranks.length>1?ranks[0].rank:null,search_volume:sv.ai_search_volume??sv.search_volume??0,tags:kw.tags,country:(kw.search_locale?.country_code||'us').toLowerCase(),domainId:domain.id,domainName:domain.display_name||domain.domain};
+      return{id:kw.id,keyword:kw.keyword,rank:ranks.length>0?ranks[ranks.length-1].rank:null,rank_compare:ranks.length>1?ranks[0].rank:null,search_volume:sv.ai_search_volume??sv.search_volume??0,tags:kw.tags,country:(kw.search_locale?.country_code||'us').toLowerCase(),domainId:domain.id,domainName:domain.display_name||domain.domain,domainUrl:domain.domain};
     });
   }catch(e){if(retries>0&&(e.message.includes('429')||e.message.includes('502'))){await sleep(3000);return fetchKwsForDomain(domain,retries-1);}return[];}
 }
@@ -735,7 +743,7 @@ function buildOppData(ahMap){
     const cc=(kw.country||'us').toLowerCase(),ah=ahMap[`${kw.keyword.toLowerCase()}|${cc}`]||{};
     const kd=ah.kd??null,aiVolume=kw.search_volume||0,ahVolume=ah.volume||0,rank=kw.rank;
     const score=calcScore(rank,aiVolume,ahVolume,kd),opportunity=rank<=3?'protect':rank<=10?'push':rank<=20?'quickwin':'build';
-    return{keyword:kw.keyword,domain:kw.domainName,domainId:kw.domainId,rank,aiVolume,ahVolume,kd,score,opportunity};
+    return{keyword:kw.keyword,domain:kw.domainName,domainUrl:kw.domainUrl,domainId:kw.domainId,rank,aiVolume,ahVolume,kd,score,opportunity};
   });
   populateOppDomainFilter();renderOppStats();renderOppTable();
 }
@@ -786,13 +794,36 @@ function renderOppTable(){
   filteredOpp.sort((a,b)=>oppSortField==='keyword'?oppSortDir*a.keyword.localeCompare(b.keyword):oppSortField==='domain'?oppSortDir*a.domain.localeCompare(b.domain):oppSortDir*((a[oppSortField]??-1)-(b[oppSortField]??-1)));
   if(oppData.length===0){document.getElementById('opp-table-body').innerHTML='<div class="empty-panel" style="padding:60px"><div class="empty-icon">\uD83D\uDD0D</div>Enter your Ahrefs API key above and click Fetch Opportunity Data</div>';return;}
   const labels={protect:'<span class="opp-label opp-protect">\uD83C\uDFC6 Protect</span>',push:'<span class="opp-label opp-push">\u26A1 Push</span>',quickwin:'<span class="opp-label opp-quickwin">\uD83D\uDD25 Quick Win</span>',build:'<span class="opp-label opp-build">\uD83D\uDCC8 Build</span>'};
+  const queuedSet=new Set(JSON.parse(localStorage.getItem('ar_queued_opps')||'[]'));
+  window._oppQueue={};
   const page=paginate(filteredOpp,oppPage,50,'opp-pagination-info','opp-page-btns',p=>{oppPage=p;renderOppTable();});
-  document.getElementById('opp-table-body').innerHTML=page.map(o=>{
+  document.getElementById('opp-table-body').innerHTML=page.map((o,i)=>{
     const kdCls=o.kd===null?'':o.kd<30?'kd-easy':o.kd<60?'kd-medium':'kd-hard';
     const kdHtml=o.kd!==null?`<div class="kd-bar"><div class="kd-dot ${kdCls}"></div>${o.kd}</div>`:'<span style="color:var(--muted)">—</span>';
     const sc=o.score>=80?'var(--up)':o.score>=50?'var(--gold)':'var(--muted)';
-    return`<div class="opp-row"><div class="kw-cell">${esc(o.keyword)}</div><div class="domain-cell">${esc(o.domain)}</div><div class="rank-cell" style="text-align:center">#${o.rank}</div><div class="vol-cell" style="text-align:center">${o.aiVolume?o.aiVolume.toLocaleString():'—'}</div><div class="vol-cell" style="text-align:center">${o.ahVolume?o.ahVolume.toLocaleString():'—'}</div><div style="text-align:center">${kdHtml}</div><div style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:800;text-align:center;color:${sc}">${o.score}</div><div>${labels[o.opportunity]||''}</div></div>`;
+    const qk=`oq_${i}`;
+    window._oppQueue[qk]={domain:o.domainUrl||o.domain,keyword:o.keyword,rank:o.rank,opportunity:o.opportunity,score:o.score};
+    const rowKey=`${o.domainUrl||o.domain}|${o.keyword}`;
+    const isQueued=queuedSet.has(rowKey);
+    const qBtn=`<button class="queue-btn${isQueued?' queued':''}" onclick="queueOpportunity(this,'${qk}')"${isQueued?' disabled':''}>${isQueued?'✓ Queued':'+ Queue'}</button>`;
+    return`<div class="opp-row"><div class="kw-cell">${esc(o.keyword)}</div><div class="domain-cell">${esc(o.domain)}</div><div class="rank-cell" style="text-align:center">#${o.rank}</div><div class="vol-cell" style="text-align:center">${o.aiVolume?o.aiVolume.toLocaleString():'—'}</div><div class="vol-cell" style="text-align:center">${o.ahVolume?o.ahVolume.toLocaleString():'—'}</div><div style="text-align:center">${kdHtml}</div><div style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:800;text-align:center;color:${sc}">${o.score}</div><div>${labels[o.opportunity]||''}</div><div>${qBtn}</div></div>`;
   }).join('');
+}
+window._oppQueue={};
+async function queueOpportunity(btn,qk){
+  const d=window._oppQueue[qk];if(!d)return;
+  const key=localStorage.getItem('ar_queue_key');
+  if(!key){alert('Enter your CA Queue Key in the header above first');return;}
+  btn.disabled=true;btn.textContent='...';
+  try{
+    const r=await fetch('https://site-inventory-theta.vercel.app/api/content-queue',{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`},body:JSON.stringify({domain:d.domain,keyword:d.keyword,current_rank:d.rank,opportunity:d.opportunity,score:d.score,added_from:'rankwatch'})});
+    const j=await r.json();
+    if(!r.ok)throw new Error(j.error||r.statusText);
+    const qs=new Set(JSON.parse(localStorage.getItem('ar_queued_opps')||'[]'));
+    qs.add(`${d.domain}|${d.keyword}`);
+    localStorage.setItem('ar_queued_opps',JSON.stringify([...qs]));
+    btn.textContent='✓ Queued';btn.className='queue-btn queued';
+  }catch(e){btn.disabled=false;btn.textContent='+ Queue';alert('Queue error: '+e.message);}
 }
 // REPORTS - Historical data
 const HIST={
